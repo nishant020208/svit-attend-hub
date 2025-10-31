@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
+import LeaveManagement from "./pages/LeaveManagement";
 import Timetable from "./pages/Timetable";
 import Announcements from "./pages/Announcements";
 import Reports from "./pages/Reports";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/attendance" element={<Attendance />} />
+          <Route path="/leave" element={<LeaveManagement />} />
           <Route path="/timetable" element={<Timetable />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/reports" element={<Reports />} />

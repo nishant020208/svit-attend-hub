@@ -21,6 +21,17 @@ export default function Settings() {
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("STUDENT");
+  
+  // Profile settings
+  const [profileSettings, setProfileSettings] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    dateOfBirth: "",
+    gender: "",
+  });
 
   useEffect(() => {
     checkAuth();
@@ -44,6 +55,19 @@ export default function Settings() {
         .single();
 
       setProfile(profileData);
+
+      // Load profile settings
+      if (profileData) {
+        setProfileSettings({
+          firstName: profileData.first_name || "",
+          lastName: profileData.last_name || "",
+          email: profileData.email || "",
+          phone: profileData.phone || "",
+          address: profileData.address || "",
+          dateOfBirth: profileData.date_of_birth || "",
+          gender: profileData.gender || "",
+        });
+      }
 
       if (profileData?.role === "ADMIN") {
         fetchWhitelist();
@@ -134,6 +158,35 @@ export default function Settings() {
     }
   };
 
+  const handleUpdateProfile = async () => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          first_name: profileSettings.firstName,
+          last_name: profileSettings.lastName,
+          phone: profileSettings.phone,
+          address: profileSettings.address,
+          date_of_birth: profileSettings.dateOfBirth,
+          gender: profileSettings.gender,
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
@@ -141,12 +194,96 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-background">
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
-      <main className="container mx-auto p-6">
+      <main className="container mx-auto p-4 md:p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>
           <p className="text-muted-foreground">Manage system settings and preferences</p>
         </div>
 
+        {/* Profile Settings - Available to All Users */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Profile Settings</CardTitle>
+            <CardDescription>Update your personal information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  placeholder="First Name"
+                  value={profileSettings.firstName}
+                  onChange={(e) => setProfileSettings({ ...profileSettings, firstName: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  placeholder="Last Name"
+                  value={profileSettings.lastName}
+                  onChange={(e) => setProfileSettings({ ...profileSettings, lastName: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Email"
+                  value={profileSettings.email}
+                  disabled
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  placeholder="+91 XXXXXXXXXX"
+                  value={profileSettings.phone}
+                  onChange={(e) => setProfileSettings({ ...profileSettings, phone: e.target.value })}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  placeholder="Full Address"
+                  value={profileSettings.address}
+                  onChange={(e) => setProfileSettings({ ...profileSettings, address: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  value={profileSettings.dateOfBirth}
+                  onChange={(e) => setProfileSettings({ ...profileSettings, dateOfBirth: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="gender">Gender</Label>
+                <Select value={profileSettings.gender} onValueChange={(value) => setProfileSettings({ ...profileSettings, gender: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button onClick={handleUpdateProfile} className="mt-4">
+              Save Profile
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Admin Settings */}
         {profile?.role === "ADMIN" && (
           <>
             <Card className="mb-6">
@@ -183,7 +320,8 @@ export default function Settings() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="STUDENT">Student</SelectItem>
-                        <SelectItem value="FACULTY">Faculty</SelectItem>
+                        <SelectItem value="FACULTY">Teacher</SelectItem>
+                        <SelectItem value="PARENT">Parent</SelectItem>
                         <SelectItem value="ADMIN">Admin</SelectItem>
                       </SelectContent>
                     </Select>

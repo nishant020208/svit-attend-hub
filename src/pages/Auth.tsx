@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthForm } from "@/components/auth/AuthForm";
+import { RoleBasedAuthForm } from "@/components/auth/RoleBasedAuthForm";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -26,5 +26,5 @@ export default function Auth() {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  return <AuthForm />;
+  return <RoleBasedAuthForm />;
 }
