@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import svitLogo from "@/assets/svit-logo.png";
+import svitLogo from "@/assets/svit-logo-official.jpg";
 
 interface TopTabsProps {
   userEmail?: string;
@@ -23,6 +23,7 @@ interface TopTabsProps {
 const tabs = [
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
   { name: "Attendance", path: "/attendance", icon: ClipboardCheck },
+  { name: "Leave", path: "/leave", icon: FileText },
   { name: "Timetable", path: "/timetable", icon: Calendar },
   { name: "Announcements", path: "/announcements", icon: Megaphone },
   { name: "Reports", path: "/reports", icon: FileText },
