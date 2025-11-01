@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Calendar, User } from "lucide-react";
+import { Plus, Calendar, User, Paperclip, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function Announcements() {
@@ -21,6 +21,8 @@ export default function Announcements() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -83,12 +85,33 @@ export default function Announcements() {
     }
 
     try {
+      setUploading(true);
+      let attachmentUrl = null;
+
+      // Upload file if provided
+      if (uploadedFile) {
+        const fileExt = uploadedFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('announcements')
+          .upload(fileName, uploadedFile);
+
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('announcements')
+          .getPublicUrl(fileName);
+        
+        attachmentUrl = publicUrl;
+      }
+
       const { error } = await supabase
         .from("announcements")
         .insert({
           title,
           content,
           posted_by: user.id,
+          attachment_url: attachmentUrl,
         });
 
       if (error) throw error;
@@ -100,6 +123,7 @@ export default function Announcements() {
 
       setTitle("");
       setContent("");
+      setUploadedFile(null);
       setDialogOpen(false);
       fetchAnnouncements();
     } catch (error: any) {
@@ -108,6 +132,8 @@ export default function Announcements() {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -157,8 +183,22 @@ export default function Announcements() {
                       onChange={(e) => setContent(e.target.value)}
                     />
                   </div>
-                  <Button onClick={handleCreateAnnouncement} className="w-full">
-                    Post Announcement
+                  <div>
+                    <Label htmlFor="file">Attachment (PDF/CSV)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="file"
+                        type="file"
+                        accept=".pdf,.csv"
+                        onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
+                      />
+                      {uploadedFile && (
+                        <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                  <Button onClick={handleCreateAnnouncement} className="w-full" disabled={uploading}>
+                    {uploading ? "Uploading..." : "Post Announcement"}
                   </Button>
                 </div>
               </DialogContent>
@@ -184,6 +224,16 @@ export default function Announcements() {
               </CardHeader>
               <CardContent>
                 <p className="text-foreground whitespace-pre-wrap">{announcement.content}</p>
+                {announcement.attachment_url && (
+                  <div className="mt-4">
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={announcement.attachment_url} download target="_blank" rel="noopener noreferrer">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Attachment
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

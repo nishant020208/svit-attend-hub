@@ -3,9 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, TrendingUp, FileText, Bell } from "lucide-react";
+import { Users, TrendingUp, FileText, Bell, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
@@ -14,6 +17,8 @@ export default function ParentDashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [children, setChildren] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [studentEmail, setStudentEmail] = useState("");
 
   useEffect(() => {
     checkAuth();
@@ -103,6 +108,79 @@ export default function ParentDashboard() {
     }
   };
 
+  const handleLinkStudent = async () => {
+    if (!studentEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter student email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Find student by email
+      const { data: studentProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", studentEmail)
+        .eq("role", "STUDENT")
+        .maybeSingle();
+
+      if (profileError || !studentProfile) {
+        toast({
+          title: "Error",
+          description: "Student not found with this email",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get student record
+      const { data: studentData, error: studentError } = await supabase
+        .from("students")
+        .select("id")
+        .eq("user_id", studentProfile.id)
+        .maybeSingle();
+
+      if (studentError || !studentData) {
+        toast({
+          title: "Error",
+          description: "Student record not found",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create parent-student relation
+      const { error: relationError } = await supabase
+        .from("parent_student_relation")
+        .insert({
+          parent_id: user.id,
+          student_id: studentData.id,
+          relation_type: "PARENT",
+        });
+
+      if (relationError) throw relationError;
+
+      toast({
+        title: "Success",
+        description: "Student linked successfully",
+      });
+
+      setStudentEmail("");
+      setDialogOpen(false);
+      fetchChildren(user.id);
+    } catch (error: any) {
+      console.error("Error linking student:", error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -122,13 +200,45 @@ export default function ParentDashboard() {
         userRole={profile?.role}
       />
       <main className="container mx-auto p-4 md:p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-            Parent Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            Monitor your child's academic progress
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+              Parent Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              Monitor your child's academic progress
+            </p>
+          </div>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <LinkIcon className="mr-2 h-4 w-4" />
+                Link Student
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Link Student Account</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label>Student Email</Label>
+                  <Input
+                    type="email"
+                    value={studentEmail}
+                    onChange={(e) => setStudentEmail(e.target.value)}
+                    placeholder="student@example.com"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the registered email address of your child's student account
+                  </p>
+                </div>
+                <Button onClick={handleLinkStudent} className="w-full">
+                  Link Student
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {children.length === 0 ? (

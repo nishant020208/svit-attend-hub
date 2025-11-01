@@ -97,6 +97,30 @@ export type Database = {
           },
         ]
       }
+      courses: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leave_requests: {
         Row: {
           created_at: string
@@ -240,6 +264,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sections: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sections_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {

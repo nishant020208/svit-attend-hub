@@ -11,35 +11,16 @@ interface TopTabsProps {
   userName?: string;
   userRole?: string;
 }
-const tabs = [{
-  name: "Dashboard",
-  path: "/dashboard",
-  icon: LayoutDashboard
-}, {
-  name: "Attendance",
-  path: "/attendance",
-  icon: ClipboardCheck
-}, {
-  name: "Leave",
-  path: "/leave",
-  icon: FileText
-}, {
-  name: "Timetable",
-  path: "/timetable",
-  icon: Calendar
-}, {
-  name: "Announcements",
-  path: "/announcements",
-  icon: Megaphone
-}, {
-  name: "Reports",
-  path: "/reports",
-  icon: FileText
-}, {
-  name: "Settings",
-  path: "/settings",
-  icon: Settings
-}];
+const tabs = [
+  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
+  { name: "Attendance", path: "/attendance", icon: ClipboardCheck, roles: ["ADMIN", "FACULTY", "STUDENT"] },
+  { name: "Leave", path: "/leave", icon: FileText, roles: ["ADMIN", "FACULTY", "STUDENT"] },
+  { name: "Timetable", path: "/timetable", icon: Calendar, roles: ["ADMIN", "FACULTY", "STUDENT"] },
+  { name: "Announcements", path: "/announcements", icon: Megaphone, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
+  { name: "Reports", path: "/reports", icon: FileText, roles: ["ADMIN", "FACULTY", "STUDENT"] },
+  { name: "Courses", path: "/courses", icon: Settings, roles: ["ADMIN"] },
+  { name: "Settings", path: "/settings", icon: Settings, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] }
+];
 export function TopTabs({
   userEmail,
   userName,
@@ -77,7 +58,7 @@ export function TopTabs({
 
         {/* Desktop Tabs */}
         <nav className="hidden lg:flex items-center gap-1">
-          {tabs.map(tab => <NavLink key={tab.path} to={tab.path} className={({
+          {tabs.filter(tab => !tab.roles || tab.roles.includes(userRole)).map(tab => <NavLink key={tab.path} to={tab.path} className={({
           isActive
         }) => `flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${isActive ? "bg-primary-foreground/10 text-primary-foreground border-b-2 border-primary-foreground" : "text-primary-foreground/70 hover:bg-primary-foreground/5 hover:text-primary-foreground"}`}>
               <tab.icon className="h-4 w-4" />
@@ -93,7 +74,7 @@ export function TopTabs({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            {tabs.map(tab => <DropdownMenuItem key={tab.path} asChild>
+            {tabs.filter(tab => !tab.roles || tab.roles.includes(userRole)).map(tab => <DropdownMenuItem key={tab.path} asChild>
                 <NavLink to={tab.path} className="flex items-center gap-2 cursor-pointer">
                   <tab.icon className="h-4 w-4" />
                   <span>{tab.name}</span>
