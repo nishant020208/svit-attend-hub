@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity } from "lucide-react";
+import { Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity, BookOpen, Calendar, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 
@@ -242,6 +242,54 @@ export default function AdminDashboard() {
               <Button onClick={() => navigate("/leave")} variant="outline" className="w-full justify-start h-auto py-4">
                 <UserCheck className="mr-2 h-5 w-5" />
                 Leave Management
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid gap-6 md:grid-cols-3 mb-8">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/courses")}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Course Management
+              </CardTitle>
+              <CardDescription>Add and manage courses & sections</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                Manage Courses
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/timetable")}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Timetable
+              </CardTitle>
+              <CardDescription>Manage class schedules</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                Manage Timetable
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/announcements")}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Announcements
+              </CardTitle>
+              <CardDescription>Post announcements</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                Create Announcement
               </Button>
             </CardContent>
           </Card>
