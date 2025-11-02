@@ -1,0 +1,73 @@
+import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface AppMenuProps {
+  userRole?: string;
+}
+
+export function AppMenu({ userRole }: AppMenuProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been signed out successfully",
+    });
+    navigate("/auth");
+  };
+
+  const menuItems = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+    { icon: Calendar, label: "Timetable", path: "/timetable" },
+    { icon: ClipboardList, label: "Attendance", path: "/attendance" },
+    { icon: FileText, label: "Leave Management", path: "/leave-management" },
+    { icon: Bell, label: "Announcements", path: "/announcements" },
+    { icon: BookOpen, label: "Reports", path: "/reports" },
+  ];
+
+  if (userRole === "ADMIN") {
+    menuItems.push({ icon: Users, label: "Course Management", path: "/course-management" });
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-9 w-9">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuLabel>Navigation</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {menuItems.map((item) => (
+          <DropdownMenuItem key={item.path} onClick={() => navigate(item.path)}>
+            <item.icon className="mr-2 h-4 w-4" />
+            {item.label}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate("/settings")}>
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

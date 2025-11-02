@@ -127,7 +127,7 @@ export default function LeaveManagement() {
 
       setNewLeave({ subject: "", reason: "", startDate: "", endDate: "" });
       setDialogOpen(false);
-      fetchLeaveRequests(profile?.role);
+      await fetchLeaveRequests(profile?.role);
     } catch (error: any) {
       toast({
         title: "Error",
