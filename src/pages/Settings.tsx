@@ -25,6 +25,10 @@ export default function Settings() {
   const [newRole, setNewRole] = useState("STUDENT");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   
+  // Parent-Student linking
+  const [studentEmail, setStudentEmail] = useState("");
+  const [linkedStudents, setLinkedStudents] = useState<any[]>([]);
+  
   // Profile settings
   const [profileSettings, setProfileSettings] = useState({
     firstName: "",
@@ -75,11 +79,108 @@ export default function Settings() {
       if (profileData?.role === "ADMIN") {
         fetchWhitelist();
       }
+
+      if (profileData?.role === "PARENT") {
+        fetchLinkedStudents();
+      }
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/auth");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLinkedStudents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("parent_student_relation")
+        .select(`
+          *,
+          students (
+            id,
+            roll_number,
+            course,
+            section,
+            year,
+            profiles:user_id (name, email)
+          )
+        `)
+        .eq("parent_id", user.id);
+
+      if (error) throw error;
+      setLinkedStudents(data || []);
+    } catch (error: any) {
+      console.error("Error fetching linked students:", error);
+    }
+  };
+
+  const handleLinkStudent = async () => {
+    if (!studentEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter student email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Find student by email
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", studentEmail)
+        .eq("role", "STUDENT")
+        .single();
+
+      if (profileError || !profileData) {
+        toast({
+          title: "Error",
+          description: "Student not found with this email",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: studentData, error: studentError } = await supabase
+        .from("students")
+        .select("id")
+        .eq("user_id", profileData.id)
+        .single();
+
+      if (studentError || !studentData) {
+        toast({
+          title: "Error",
+          description: "Student record not found",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from("parent_student_relation")
+        .insert({
+          parent_id: user.id,
+          student_id: studentData.id,
+          relation_type: "PARENT",
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Student linked successfully",
+      });
+
+      setStudentEmail("");
+      fetchLinkedStudents();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -446,12 +547,50 @@ export default function Settings() {
           </>
         )}
 
-        {profile?.role !== "ADMIN" && (
-          <Card>
-            <CardContent className="py-12">
-              <p className="text-muted-foreground text-center">
-                Only administrators can access settings
-              </p>
+        {/* Parent Settings */}
+        {profile?.role === "PARENT" && (
+          <Card className="shadow-lg">
+            <CardHeader className="gradient-accent text-primary-foreground">
+              <CardTitle>Link Student Account</CardTitle>
+              <CardDescription className="text-primary-foreground/80">
+                Enter student email to access their information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="flex gap-2 mb-6">
+                <Input
+                  type="email"
+                  placeholder="student@svit.ac.in"
+                  value={studentEmail}
+                  onChange={(e) => setStudentEmail(e.target.value)}
+                  className="flex-1"
+                />
+                <Button onClick={handleLinkStudent} className="gradient-primary">
+                  Link Student
+                </Button>
+              </div>
+
+              {linkedStudents.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Linked Students</h3>
+                  {linkedStudents.map((relation) => (
+                    <div
+                      key={relation.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium">{relation.students?.profiles?.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {relation.students?.profiles?.email}
+                        </p>
+                        <p className="text-xs text-primary">
+                          {relation.students?.course} - Year {relation.students?.year} - Section {relation.students?.section}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

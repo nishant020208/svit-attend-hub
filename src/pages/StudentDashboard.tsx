@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar, Clock, FileText, TrendingUp, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -13,6 +14,10 @@ export default function StudentDashboard() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [student, setStudent] = useState<any>(null);
+  
+  // Enable announcement notifications
+  useAnnouncementNotifications(user?.id);
+  
   const [stats, setStats] = useState({
     attendancePercentage: 0,
     presentDays: 0,
