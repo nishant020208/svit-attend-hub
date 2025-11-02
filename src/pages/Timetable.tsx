@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import Papa from "papaparse";
 
 export default function Timetable() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ export default function Timetable() {
   const [loading, setLoading] = useState(true);
   const [timetable, setTimetable] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
   const [studentData, setStudentData] = useState<any>(null);
   const [newEntry, setNewEntry] = useState({
     day_of_week: "",
@@ -159,33 +161,75 @@ export default function Timetable() {
     return days[day];
   };
 
+  const handleCSVUpload = async () => {
+    if (!csvFile) {
+      toast.error("Please select a CSV file");
+      return;
+    }
+
+    Papa.parse(csvFile, {
+      header: true,
+      complete: async (results) => {
+        try {
+          const records = results.data.map((row: any) => ({
+            day_of_week: parseInt(row.day_of_week),
+            start_time: row.start_time,
+            end_time: row.end_time,
+            subject: row.subject,
+            room: row.room,
+            course: row.course,
+            section: row.section,
+            year: parseInt(row.year),
+            faculty_id: user.id,
+          })).filter(r => r.day_of_week && r.start_time && r.end_time && r.subject && r.course && r.section && r.year);
+
+          const { error } = await supabase
+            .from("timetable")
+            .insert(records);
+
+          if (error) throw error;
+
+          toast.success(`${records.length} timetable entries added`);
+          setCsvFile(null);
+          fetchTimetable(profile, user.id);
+        } catch (error: any) {
+          toast.error(error.message || "Failed to upload CSV");
+        }
+      },
+      error: (error) => {
+        toast.error("Failed to parse CSV file");
+      },
+    });
+  };
+
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
       <main className="container mx-auto p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Timetable</h1>
-            <p className="text-muted-foreground">View and manage class schedules</p>
-            {studentData && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {studentData.course} - {studentData.section} - Year {studentData.year}
-              </p>
-            )}
-          </div>
-          {profile?.role === "ADMIN" && (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Entry
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Timetable</h1>
+              <p className="text-muted-foreground">View and manage class schedules</p>
+              {studentData && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {studentData.course} - {studentData.section} - Year {studentData.year}
+                </p>
+              )}
+            </div>
+            {profile?.role === "ADMIN" && (
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gradient-primary">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Entry
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Add Timetable Entry</DialogTitle>
                 </DialogHeader>
@@ -279,6 +323,22 @@ export default function Timetable() {
               </DialogContent>
             </Dialog>
           )}
+          
+          {profile?.role === "ADMIN" && (
+            <div className="flex gap-2 mt-4">
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                className="max-w-xs"
+              />
+              <Button onClick={handleCSVUpload} disabled={!csvFile} className="gradient-accent">
+                <Upload className="mr-2 h-4 w-4" />
+                Upload CSV
+              </Button>
+            </div>
+          )}
+          </div>
         </div>
 
         <Card>

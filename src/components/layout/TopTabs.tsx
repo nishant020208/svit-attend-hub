@@ -14,6 +14,7 @@ interface TopTabsProps {
 const tabs = [
   { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
   { name: "Attendance", path: "/attendance", icon: ClipboardCheck, roles: ["ADMIN", "FACULTY", "STUDENT"] },
+  { name: "QR Attendance", path: "/attendance-qr", icon: ClipboardCheck, roles: ["ADMIN", "FACULTY", "STUDENT"] },
   { name: "Leave", path: "/leave", icon: FileText, roles: ["ADMIN", "FACULTY", "STUDENT"] },
   { name: "Timetable", path: "/timetable", icon: Calendar, roles: ["ADMIN", "FACULTY", "STUDENT"] },
   { name: "Announcements", path: "/announcements", icon: Megaphone, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },

@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Upload } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import Papa from "papaparse";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ export default function Settings() {
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("STUDENT");
+  const [csvFile, setCsvFile] = useState<File | null>(null);
   
   // Profile settings
   const [profileSettings, setProfileSettings] = useState({
@@ -158,6 +161,58 @@ export default function Settings() {
     }
   };
 
+  const handleCSVUpload = async () => {
+    if (!csvFile) {
+      toast({
+        title: "Error",
+        description: "Please select a CSV file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    Papa.parse(csvFile, {
+      header: true,
+      complete: async (results) => {
+        try {
+          const records = results.data.map((row: any) => ({
+            email: row.email,
+            name: row.name,
+            role: row.role || "STUDENT",
+            added_by: user.id,
+          })).filter(r => r.email && r.name);
+
+          const { error } = await supabase
+            .from("whitelist")
+            .insert(records);
+
+          if (error) throw error;
+
+          toast({
+            title: "Success",
+            description: `${records.length} users added to whitelist`,
+          });
+
+          setCsvFile(null);
+          fetchWhitelist();
+        } catch (error: any) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+      },
+      error: (error) => {
+        toast({
+          title: "Error",
+          description: "Failed to parse CSV file",
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
   const handleUpdateProfile = async () => {
     try {
       const { error } = await supabase
@@ -192,19 +247,22 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
       <main className="container mx-auto p-4 md:p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">Manage system settings and preferences</p>
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Settings</h1>
+            <p className="text-muted-foreground">Manage system settings and preferences</p>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* Profile Settings - Available to All Users */}
-        <Card className="mb-6">
-          <CardHeader>
+        <Card className="mb-6 shadow-lg border-primary/20">
+          <CardHeader className="gradient-primary text-primary-foreground">
             <CardTitle>Profile Settings</CardTitle>
-            <CardDescription>Update your personal information</CardDescription>
+            <CardDescription className="text-primary-foreground/80">Update your personal information</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
@@ -277,7 +335,7 @@ export default function Settings() {
                 </Select>
               </div>
             </div>
-            <Button onClick={handleUpdateProfile} className="mt-4">
+            <Button onClick={handleUpdateProfile} className="mt-4 gradient-secondary">
               Save Profile
             </Button>
           </CardContent>
@@ -286,12 +344,12 @@ export default function Settings() {
         {/* Admin Settings */}
         {profile?.role === "ADMIN" && (
           <>
-            <Card className="mb-6">
-              <CardHeader>
+            <Card className="mb-6 shadow-lg">
+              <CardHeader className="gradient-secondary text-primary-foreground">
                 <CardTitle>Add User to Whitelist</CardTitle>
-                <CardDescription>Allow new users to register for the system</CardDescription>
+                <CardDescription className="text-primary-foreground/80">Allow new users to register for the system</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="grid gap-4 md:grid-cols-3">
                   <div>
                     <Label htmlFor="email">Email</Label>
@@ -327,14 +385,33 @@ export default function Settings() {
                     </Select>
                   </div>
                 </div>
-                <Button onClick={handleAddToWhitelist} className="mt-4">
+                <Button onClick={handleAddToWhitelist} className="mt-4 gradient-primary">
                   <Plus className="mr-2 h-4 w-4" />
                   Add to Whitelist
                 </Button>
+
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="font-semibold mb-4">Bulk Upload (CSV)</h3>
+                  <div className="flex gap-2">
+                    <Input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleCSVUpload} disabled={!csvFile} className="gradient-accent">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload CSV
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    CSV format: email, name, role (STUDENT/FACULTY/PARENT/ADMIN)
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle>Whitelisted Users</CardTitle>
                 <CardDescription>{whitelist.length} users whitelisted</CardDescription>
