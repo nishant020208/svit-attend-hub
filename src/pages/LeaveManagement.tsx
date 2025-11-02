@@ -187,18 +187,20 @@ export default function LeaveManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
       <main className="container mx-auto p-4 md:p-6">
         <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Leave Management</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Leave Management
+            </h1>
             <p className="text-muted-foreground">Submit and track leave requests</p>
           </div>
           {profile?.role === "STUDENT" && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="gradient-primary">
                   <Plus className="mr-2 h-4 w-4" />
                   Request Leave
                 </Button>
@@ -248,18 +250,18 @@ export default function LeaveManagement() {
                       />
                     </div>
                   </div>
-                  <Button onClick={handleCreateLeave} className="w-full">
-                    Submit Request
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
+                <Button onClick={handleCreateLeave} className="w-full gradient-primary">
+                  Submit Request
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
         </div>
 
         <div className="space-y-4">
           {leaveRequests.map((request) => (
-            <Card key={request.id} className="shadow-sm hover:shadow-md transition-shadow">
+            <Card key={request.id} className="shadow-lg hover:shadow-xl transition-shadow border-primary/20">
               <CardHeader>
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
                   <div className="flex-1">
@@ -301,7 +303,7 @@ export default function LeaveManagement() {
                       <Button
                         size="sm"
                         onClick={() => handleUpdateLeaveStatus(request.id, "APPROVED", "Approved")}
-                        className="flex-1 min-w-[120px]"
+                        className="flex-1 min-w-[120px] gradient-primary"
                       >
                         <CheckCircle className="mr-2 h-4 w-4" />
                         Approve
@@ -323,7 +325,7 @@ export default function LeaveManagement() {
           ))}
 
           {leaveRequests.length === 0 && (
-            <Card>
+            <Card className="shadow-lg">
               <CardContent className="py-12">
                 <p className="text-muted-foreground text-center">No leave requests yet</p>
               </CardContent>

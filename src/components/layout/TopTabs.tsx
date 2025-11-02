@@ -48,14 +48,35 @@ export function TopTabs({
   const initials = userName?.split(" ").map(n => n[0]).join("").toUpperCase() || "U";
   return <header className="sticky top-0 z-50 w-full border-b bg-primary shadow-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 bg-blue-700 rounded-md">
-        {/* Logo and Brand */}
-        <div className="flex items-center gap-3">
-          <img src={svitLogo} alt="SVIT Logo" className="h-10 w-10 object-contain" />
-          <div className="hidden md:block">
-            <h1 className="font-bold text-primary-foreground text-sm">SVIT ERP</h1>
-            <p className="text-xs text-primary-foreground/80">Attendance System</p>
-          </div>
-        </div>
+        {/* Logo and Brand with Menu Popup */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+              <img src={svitLogo} alt="SVIT Logo" className="h-10 w-10 object-contain" />
+              <div className="hidden md:block">
+                <h1 className="font-bold text-primary-foreground text-sm">SVIT ERP</h1>
+                <p className="text-xs text-primary-foreground/80">Attendance System</p>
+              </div>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56 bg-background z-50">
+            <DropdownMenuLabel>Navigation</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {tabs.filter(tab => !tab.roles || tab.roles.includes(userRole)).map(tab => (
+              <DropdownMenuItem key={tab.path} asChild>
+                <NavLink to={tab.path} className="flex items-center gap-2 cursor-pointer">
+                  <tab.icon className="h-4 w-4" />
+                  <span>{tab.name}</span>
+                </NavLink>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Desktop Tabs */}
         <nav className="hidden lg:flex items-center gap-1">

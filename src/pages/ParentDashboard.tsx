@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
@@ -17,6 +18,10 @@ export default function ParentDashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [children, setChildren] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Enable announcement notifications
+  useAnnouncementNotifications(user?.id);
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const [studentEmail, setStudentEmail] = useState("");
 
