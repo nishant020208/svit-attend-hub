@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import svitLogo from "@/assets/svit-logo-official.jpg";
 interface TopTabsProps {
   userEmail?: string;
@@ -111,8 +112,11 @@ export function TopTabs({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* User Profile */}
-        <DropdownMenu>
+        {/* Theme Toggle & User Profile */}
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-12 w-12 rounded-full hover:bg-white/10">
               <Avatar className="h-12 w-12 border-2 border-white/30 shadow-lg">
@@ -143,6 +147,7 @@ export function TopTabs({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
     </header>;
 }
