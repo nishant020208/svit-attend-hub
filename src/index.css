@@ -146,3 +146,14 @@ All colors MUST be HSL.
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
+
+/* Hide Lovable badge */
+[data-lovable-badge],
+iframe[src*="lovable.dev/badge"],
+a[href*="lovable.dev"][target="_blank"]:has(img),
+.lovable-badge {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
