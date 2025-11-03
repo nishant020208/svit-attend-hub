@@ -6,31 +6,70 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import svitLogo from "@/assets/svit-logo-official.jpg";
-
 interface TopTabsProps {
   userEmail?: string;
   userName?: string;
   userRole?: string;
 }
-
-const tabs = [
-  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
-  { name: "Attendance", path: "/attendance", icon: ClipboardCheck, roles: ["ADMIN", "FACULTY", "STUDENT"] },
-  { name: "QR Attendance", path: "/attendance-qr", icon: ClipboardCheck, roles: ["ADMIN", "FACULTY", "STUDENT"] },
-  { name: "Leave", path: "/leave", icon: FileText, roles: ["ADMIN", "FACULTY", "STUDENT"] },
-  { name: "Timetable", path: "/timetable", icon: Calendar, roles: ["ADMIN", "FACULTY", "STUDENT"] },
-  { name: "Announcements", path: "/announcements", icon: Megaphone, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
-  { name: "Reports", path: "/reports", icon: FileText, roles: ["ADMIN", "FACULTY", "STUDENT"] },
-  { name: "Courses", path: "/courses", icon: Settings, roles: ["ADMIN"] },
-  { name: "Settings", path: "/settings", icon: Settings, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] }
-];
-
-export function TopTabs({ userEmail, userName, userRole }: TopTabsProps) {
+const tabs = [{
+  name: "Dashboard",
+  path: "/dashboard",
+  icon: LayoutDashboard,
+  roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"]
+}, {
+  name: "Attendance",
+  path: "/attendance",
+  icon: ClipboardCheck,
+  roles: ["ADMIN", "FACULTY", "STUDENT"]
+}, {
+  name: "QR Attendance",
+  path: "/attendance-qr",
+  icon: ClipboardCheck,
+  roles: ["ADMIN", "FACULTY", "STUDENT"]
+}, {
+  name: "Leave",
+  path: "/leave",
+  icon: FileText,
+  roles: ["ADMIN", "FACULTY", "STUDENT"]
+}, {
+  name: "Timetable",
+  path: "/timetable",
+  icon: Calendar,
+  roles: ["ADMIN", "FACULTY", "STUDENT"]
+}, {
+  name: "Announcements",
+  path: "/announcements",
+  icon: Megaphone,
+  roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"]
+}, {
+  name: "Reports",
+  path: "/reports",
+  icon: FileText,
+  roles: ["ADMIN", "FACULTY", "STUDENT"]
+}, {
+  name: "Courses",
+  path: "/courses",
+  icon: Settings,
+  roles: ["ADMIN"]
+}, {
+  name: "Settings",
+  path: "/settings",
+  icon: Settings,
+  roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"]
+}];
+export function TopTabs({
+  userEmail,
+  userName,
+  userRole
+}: TopTabsProps) {
   const navigate = useNavigate();
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
+    const {
+      error
+    } = await supabase.auth.signOut();
     if (error) {
       toast({
         title: "Error",
@@ -41,12 +80,9 @@ export function TopTabs({ userEmail, userName, userRole }: TopTabsProps) {
       navigate("/auth");
     }
   };
-
   const initials = userName?.split(" ").map(n => n[0]).join("").toUpperCase() || "U";
-
-  return (
-    <header className="sticky top-0 z-50 w-full border-b shadow-lg bg-gradient-primary">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+  return <header className="sticky top-0 z-50 w-full border-b shadow-lg bg-gradient-primary">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 bg-blue-700">
         {/* Logo and Brand with Menu Popup */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -61,14 +97,12 @@ export function TopTabs({ userEmail, userName, userRole }: TopTabsProps) {
           <DropdownMenuContent align="start" className="w-64 bg-background z-50">
             <DropdownMenuLabel className="text-base">Navigation Menu</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {tabs.filter(tab => !tab.roles || tab.roles.includes(userRole)).map(tab => (
-              <DropdownMenuItem key={tab.path} asChild>
+            {tabs.filter(tab => !tab.roles || tab.roles.includes(userRole)).map(tab => <DropdownMenuItem key={tab.path} asChild>
                 <NavLink to={tab.path} className="flex items-center gap-3 cursor-pointer py-2">
                   <tab.icon className="h-4 w-4" />
                   <span>{tab.name}</span>
                 </NavLink>
-              </DropdownMenuItem>
-            ))}
+              </DropdownMenuItem>)}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive font-medium">
               <LogOut className="mr-2 h-4 w-4" />
@@ -110,6 +144,5 @@ export function TopTabs({ userEmail, userName, userRole }: TopTabsProps) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </header>
-  );
+    </header>;
 }
