@@ -147,13 +147,26 @@ All colors MUST be HSL.
   }
 }
 
-/* Hide Lovable badge */
+/* Hide Lovable badge - Multiple selectors for maximum coverage */
 [data-lovable-badge],
+[data-lovable-badge] *,
 iframe[src*="lovable.dev/badge"],
-a[href*="lovable.dev"][target="_blank"]:has(img),
-.lovable-badge {
+iframe[src*="lovable.dev"],
+a[href*="lovable.dev"],
+a[href*="lovable.app"],
+.lovable-badge,
+div[class*="lovable"],
+button[class*="lovable"],
+[id*="lovable-badge"],
+[class*="edit-in-lovable"],
+[data-theme-toggle] {
   display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  z-index: -9999 !important;
 }
