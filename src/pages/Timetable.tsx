@@ -324,21 +324,33 @@ export default function Timetable() {
             </Dialog>
           )}
           
-          {profile?.role === "ADMIN" && (
-            <div className="flex gap-2 mt-4">
-              <Input
-                type="file"
-                accept=".csv"
-                onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
-                className="max-w-xs"
-              />
-              <Button onClick={handleCSVUpload} disabled={!csvFile} className="gradient-accent">
-                <Upload className="mr-2 h-4 w-4" />
-                Upload CSV
-              </Button>
-            </div>
-          )}
           </div>
+          
+          {profile?.role === "ADMIN" && (
+            <Card className="glass-effect">
+              <CardHeader>
+                <CardTitle>Bulk Upload</CardTitle>
+                <CardDescription>Upload multiple timetable entries via CSV file</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Input
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                    className="flex-1"
+                  />
+                  <Button onClick={handleCSVUpload} disabled={!csvFile} className="gradient-accent">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload CSV
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  CSV format: day_of_week,start_time,end_time,subject,room,course,section,year
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <Card>
@@ -350,46 +362,92 @@ export default function Timetable() {
             {timetable.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No timetable entries found</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Day</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Room</TableHead>
-                    {profile?.role === "ADMIN" && <TableHead>Course/Section</TableHead>}
-                    {profile?.role === "ADMIN" && <TableHead>Actions</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Day</TableHead>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Room</TableHead>
+                        {profile?.role === "ADMIN" && <TableHead>Course/Section</TableHead>}
+                        {profile?.role === "ADMIN" && <TableHead>Actions</TableHead>}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {timetable.map((entry) => (
+                        <TableRow key={entry.id}>
+                          <TableCell className="font-medium">{getDayName(entry.day_of_week)}</TableCell>
+                          <TableCell>
+                            {entry.start_time} - {entry.end_time}
+                          </TableCell>
+                          <TableCell>{entry.subject}</TableCell>
+                          <TableCell>{entry.room || "—"}</TableCell>
+                          {profile?.role === "ADMIN" && (
+                            <TableCell>
+                              {entry.course} - {entry.section} (Year {entry.year})
+                            </TableCell>
+                          )}
+                          {profile?.role === "ADMIN" && (
+                            <TableCell>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDelete(entry.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-3">
                   {timetable.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell className="font-medium">{getDayName(entry.day_of_week)}</TableCell>
-                      <TableCell>
-                        {entry.start_time} - {entry.end_time}
-                      </TableCell>
-                      <TableCell>{entry.subject}</TableCell>
-                      <TableCell>{entry.room || "—"}</TableCell>
-                      {profile?.role === "ADMIN" && (
-                        <TableCell>
-                          {entry.course} - {entry.section} (Year {entry.year})
-                        </TableCell>
-                      )}
-                      {profile?.role === "ADMIN" && (
-                        <TableCell>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(entry.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      )}
-                    </TableRow>
+                    <Card key={entry.id} className="glass-effect">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="font-semibold text-lg">{entry.subject}</h3>
+                            <p className="text-sm text-muted-foreground">{getDayName(entry.day_of_week)}</p>
+                          </div>
+                          {profile?.role === "ADMIN" && (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDelete(entry.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Time:</span>
+                            <span className="font-medium">{entry.start_time} - {entry.end_time}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Room:</span>
+                            <span className="font-medium">{entry.room || "—"}</span>
+                          </div>
+                          {profile?.role === "ADMIN" && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Class:</span>
+                              <span className="font-medium">{entry.course} - {entry.section} (Year {entry.year})</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
