@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, GraduationCap, User, Users, Shield } from "lucide-react";
 import svitLogo from "@/assets/svit-logo-official.jpg";
+import { ForgotPassword } from "./ForgotPassword";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -226,6 +227,9 @@ export function RoleBasedAuthForm() {
                   {loginForm.formState.errors.password && (
                     <p className="text-sm text-destructive">{loginForm.formState.errors.password.message}</p>
                   )}
+                </div>
+                <div className="flex justify-end">
+                  <ForgotPassword />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}

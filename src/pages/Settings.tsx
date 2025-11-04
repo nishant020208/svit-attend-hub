@@ -347,17 +347,49 @@ export default function Settings() {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
 
+  const handleContactUs = () => {
+    window.location.href = "mailto:nishu0202081@gmail.com?subject=SVIT App Support";
+  };
+
+  const handleShareApp = () => {
+    const message = "Check out SVIT App for attendance and timetable management!";
+    if (navigator.share) {
+      navigator.share({
+        title: "SVIT App",
+        text: message,
+      });
+    } else {
+      toast({
+        title: "Info",
+        description: "Sharing not supported on this browser",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
-      <main className="container mx-auto p-4 md:p-6">
+      <main className="container mx-auto p-4 md:p-6 max-w-4xl">
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Settings</h1>
-            <p className="text-muted-foreground">Manage system settings and preferences</p>
+            <p className="text-muted-foreground">Manage your preferences</p>
           </div>
-          <ThemeToggle />
         </div>
+
+        {/* Theme Toggle */}
+        <Card className="mb-6 shadow-lg border-primary/20">
+          <CardHeader>
+            <CardTitle>Theme</CardTitle>
+            <CardDescription>Choose your preferred theme</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <p className="text-sm">Switch between Light, Dark, and Vibrant modes</p>
+              <ThemeToggle />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Profile Settings - Available to All Users */}
         <Card className="mb-6 shadow-lg border-primary/20">
@@ -594,6 +626,44 @@ export default function Settings() {
             </CardContent>
           </Card>
         )}
+
+        {/* App Section */}
+        <div className="space-y-6 mt-8">
+          <h2 className="text-xl font-semibold">App</h2>
+          
+          <Card className="shadow-lg border-primary/20 hover:shadow-xl transition-shadow cursor-pointer" onClick={handleShareApp}>
+            <CardContent className="py-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold">Share App</h3>
+                  <p className="text-sm text-muted-foreground">Share SVIT App with others</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-lg border-primary/20 hover:shadow-xl transition-shadow cursor-pointer" onClick={handleContactUs}>
+            <CardContent className="py-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold">Contact us</h3>
+                  <p className="text-sm text-muted-foreground">Suggestions, bugs, questions</p>
+                  <p className="text-xs text-muted-foreground mt-1">nishu0202081@gmail.com</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );
