@@ -106,6 +106,15 @@ export default function LeaveManagement() {
       return;
     }
 
+    if (!studentId) {
+      toast({
+        title: "Error",
+        description: "Student ID not found. Please contact administrator.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("leave_requests")
@@ -131,7 +140,7 @@ export default function LeaveManagement() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to submit leave request",
         variant: "destructive",
       });
     }
