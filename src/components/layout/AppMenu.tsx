@@ -29,18 +29,28 @@ export function AppMenu({ userRole }: AppMenuProps) {
     navigate("/auth");
   };
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-    { icon: Calendar, label: "Timetable", path: "/timetable" },
-    { icon: ClipboardList, label: "Attendance", path: "/attendance" },
-    { icon: FileText, label: "Leave Management", path: "/leave-management" },
-    { icon: Bell, label: "Announcements", path: "/announcements" },
-    { icon: BookOpen, label: "Reports", path: "/reports" },
-  ];
+  const getMenuItems = () => {
+    const items = [
+      { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
+      { icon: Calendar, label: "Timetable", path: "/timetable" },
+      { icon: FileText, label: "Leave Management", path: "/leave" },
+      { icon: Bell, label: "Announcements", path: "/announcements" },
+      { icon: BookOpen, label: "Reports", path: "/reports" },
+    ];
 
-  if (userRole === "ADMIN") {
-    menuItems.push({ icon: Users, label: "Course Management", path: "/course-management" });
-  }
+    // Teachers/Faculty get attendance access, not Admin
+    if (userRole === "FACULTY") {
+      items.splice(2, 0, { icon: ClipboardList, label: "Attendance", path: "/attendance" });
+    }
+
+    if (userRole === "ADMIN") {
+      items.push({ icon: Users, label: "Course Management", path: "/courses" });
+    }
+
+    return items;
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <DropdownMenu>

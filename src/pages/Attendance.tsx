@@ -187,7 +187,7 @@ export default function Attendance() {
 
         {(profile?.role === "FACULTY" || profile?.role === "ADMIN") && (
           <>
-            <Card className="mb-6">
+            <Card className="mb-6 glass-effect">
               <CardHeader>
                 <CardTitle>Select Class & Subject</CardTitle>
                 <CardDescription>Choose the class and subject to mark attendance</CardDescription>
@@ -253,14 +253,14 @@ export default function Attendance() {
               </CardContent>
             </Card>
 
-            {students.length > 0 && (
+            {selectedCourse && selectedYear && selectedSection && students.length > 0 && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
                     <CardTitle>Mark Attendance</CardTitle>
-                    <CardDescription>{students.length} students</CardDescription>
+                    <CardDescription>{students.length} students in {selectedCourse} - {selectedSection} Year {selectedYear}</CardDescription>
                   </div>
-                  <Button onClick={handleSaveAttendance}>
+                  <Button onClick={handleSaveAttendance} className="gradient-primary">
                     <Save className="mr-2 h-4 w-4" />
                     Save Attendance
                   </Button>
@@ -270,19 +270,20 @@ export default function Attendance() {
                     {students.map((student) => (
                       <div
                         key={student.id}
-                        className="flex items-center justify-between p-4 border rounded-lg"
+                        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg glass-effect gap-3"
                       >
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">{student.profiles?.name}</p>
                           <p className="text-sm text-muted-foreground">
                             Roll: {student.roll_number}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Button
                             variant={attendanceData[student.id] === "PRESENT" ? "default" : "outline"}
                             size="sm"
                             onClick={() => handleAttendanceChange(student.id, "PRESENT")}
+                            className="flex-1 sm:flex-none"
                           >
                             <CheckCircle className="mr-1 h-4 w-4" />
                             Present
@@ -291,6 +292,7 @@ export default function Attendance() {
                             variant={attendanceData[student.id] === "ABSENT" ? "destructive" : "outline"}
                             size="sm"
                             onClick={() => handleAttendanceChange(student.id, "ABSENT")}
+                            className="flex-1 sm:flex-none"
                           >
                             <XCircle className="mr-1 h-4 w-4" />
                             Absent
@@ -299,6 +301,7 @@ export default function Attendance() {
                             variant={attendanceData[student.id] === "LATE" ? "secondary" : "outline"}
                             size="sm"
                             onClick={() => handleAttendanceChange(student.id, "LATE")}
+                            className="flex-1 sm:flex-none"
                           >
                             <Clock className="mr-1 h-4 w-4" />
                             Late
@@ -307,6 +310,16 @@ export default function Attendance() {
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {(!selectedCourse || !selectedYear || !selectedSection || students.length === 0) && (
+              <Card className="glass-effect">
+                <CardContent className="py-12">
+                  <p className="text-center text-muted-foreground">
+                    Select class details above to load students and mark attendance
+                  </p>
                 </CardContent>
               </Card>
             )}
