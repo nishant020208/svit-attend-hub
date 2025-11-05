@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Save } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Save, AlertTriangle } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Progress } from "@/components/ui/progress";
 
 export default function Attendance() {
   const navigate = useNavigate();
@@ -67,17 +69,25 @@ export default function Attendance() {
         .from("students")
         .select("id")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (studentData) {
-        const { data: attendanceRecords } = await supabase
+        const { data: attendanceRecords, count } = await supabase
           .from("attendance")
-          .select("*")
+          .select("*", { count: "exact" })
           .eq("student_id", studentData.id)
           .order("date", { ascending: false });
 
-        // Process and display student's attendance
-        console.log("Student attendance:", attendanceRecords);
+        const presentCount = attendanceRecords?.filter(a => a.status === "PRESENT").length || 0;
+        const attendancePercentage = count ? Math.round((presentCount / count) * 100) : 0;
+        
+        setStudents([{
+          id: studentData.id,
+          attendanceRecords: attendanceRecords || [],
+          attendancePercentage,
+          presentCount,
+          totalCount: count || 0,
+        }]);
       }
     } catch (error: any) {
       console.error("Error fetching student attendance:", error);
@@ -173,7 +183,7 @@ export default function Attendance() {
   };
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+    return <LoadingSpinner />;
   }
 
   return (
@@ -326,18 +336,79 @@ export default function Attendance() {
           </>
         )}
 
-        {profile?.role === "STUDENT" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>My Attendance</CardTitle>
-              <CardDescription>View your attendance records</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground text-center py-8">
-                Your attendance records will appear here
-              </p>
-            </CardContent>
-          </Card>
+        {profile?.role === "STUDENT" && students.length > 0 && (
+          <div className="space-y-6">
+            <Card className="glass-effect">
+              <CardHeader>
+                <CardTitle>My Attendance Overview</CardTitle>
+                <CardDescription>Track your attendance percentage</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {students[0] && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold">
+                          {students[0].attendancePercentage}%
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {students[0].presentCount} / {students[0].totalCount} days present
+                        </p>
+                      </div>
+                      {students[0].attendancePercentage < 75 ? (
+                        <AlertTriangle className="h-12 w-12 text-destructive" />
+                      ) : (
+                        <CheckCircle className="h-12 w-12 text-green-600" />
+                      )}
+                    </div>
+                    <Progress value={students[0].attendancePercentage} className="h-3" />
+                    {students[0].attendancePercentage < 75 && (
+                      <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                        <p className="text-sm font-medium text-destructive">
+                          ⚠️ Warning: Your attendance is below 75%
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          You need to improve your attendance to meet the minimum requirement.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="glass-effect">
+              <CardHeader>
+                <CardTitle>Attendance History</CardTitle>
+                <CardDescription>Your recent attendance records</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {students[0]?.attendanceRecords?.slice(0, 10).map((record: any) => (
+                    <div key={record.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{record.subject}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(record.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge variant={
+                        record.status === "PRESENT" ? "default" :
+                        record.status === "LATE" ? "secondary" : "destructive"
+                      }>
+                        {record.status}
+                      </Badge>
+                    </div>
+                  ))}
+                  {students[0]?.attendanceRecords?.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      No attendance records yet
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </main>
     </div>

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
@@ -187,14 +188,7 @@ export default function ParentDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
