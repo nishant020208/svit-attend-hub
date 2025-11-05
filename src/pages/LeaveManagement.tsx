@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function LeaveManagement() {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ export default function LeaveManagement() {
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       setProfile(profileData);
 
@@ -57,10 +58,16 @@ export default function LeaveManagement() {
           .from("students")
           .select("id")
           .eq("user_id", session.user.id)
-          .single();
+          .maybeSingle();
         
         if (studentData) {
           setStudentId(studentData.id);
+        } else {
+          toast({
+            title: "Student Record Not Found",
+            description: "Please contact administrator to set up your student record.",
+            variant: "destructive",
+          });
         }
       }
 
@@ -192,7 +199,7 @@ export default function LeaveManagement() {
   };
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+    return <LoadingSpinner />;
   }
 
   return (

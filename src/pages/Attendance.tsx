@@ -111,17 +111,35 @@ export default function Attendance() {
         `)
         .eq("course", selectedCourse)
         .eq("year", parseInt(selectedYear))
-        .eq("section", selectedSection);
+        .eq("section", selectedSection)
+        .order("roll_number");
 
       if (error) throw error;
       setStudents(data || []);
 
-      // Initialize attendance data
-      const initData: any = {};
-      data?.forEach((student) => {
-        initData[student.id] = "PRESENT";
-      });
-      setAttendanceData(initData);
+      // Check for existing attendance on selected date
+      if (selectedDate && data && data.length > 0) {
+        const { data: existingAttendance } = await supabase
+          .from("attendance")
+          .select("student_id, status")
+          .eq("date", selectedDate)
+          .eq("subject", selectedSubject)
+          .in("student_id", data.map(s => s.id));
+
+        const initData: any = {};
+        data.forEach((student) => {
+          const existing = existingAttendance?.find(a => a.student_id === student.id);
+          initData[student.id] = existing?.status || "PRESENT";
+        });
+        setAttendanceData(initData);
+      } else {
+        // Initialize with default PRESENT
+        const initData: any = {};
+        data?.forEach((student) => {
+          initData[student.id] = "PRESENT";
+        });
+        setAttendanceData(initData);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -135,7 +153,7 @@ export default function Attendance() {
     if (profile?.role === "FACULTY" || profile?.role === "ADMIN") {
       fetchStudents();
     }
-  }, [selectedCourse, selectedYear, selectedSection, profile]);
+  }, [selectedCourse, selectedYear, selectedSection, selectedDate, selectedSubject, profile]);
 
   const handleAttendanceChange = (studentId: string, status: string) => {
     setAttendanceData((prev: any) => ({
@@ -324,7 +342,17 @@ export default function Attendance() {
               </Card>
             )}
 
-            {(!selectedCourse || !selectedYear || !selectedSection || students.length === 0) && (
+            {selectedCourse && selectedYear && selectedSection && students.length === 0 && (
+              <Card className="glass-effect">
+                <CardContent className="py-12">
+                  <p className="text-center text-muted-foreground">
+                    No students found in this class. Please add students from Student Management.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+            
+            {(!selectedCourse || !selectedYear || !selectedSection) && (
               <Card className="glass-effect">
                 <CardContent className="py-12">
                   <p className="text-center text-muted-foreground">
