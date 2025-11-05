@@ -45,6 +45,7 @@ export function AppMenu({ userRole }: AppMenuProps) {
 
     if (userRole === "ADMIN") {
       items.push({ icon: Users, label: "Course Management", path: "/courses" });
+      items.push({ icon: Users, label: "Student Management", path: "/students" });
     }
 
     return items;
