@@ -352,18 +352,37 @@ export default function Settings() {
   };
 
   const handleShareApp = () => {
-    const message = "Check out SVIT App for attendance and timetable management!";
+    const apkUrl = window.location.origin + "/app-release.apk";
+    const message = `Check out SVIT App for attendance and timetable management!\n\nDownload APK: ${apkUrl}`;
+    
     if (navigator.share) {
       navigator.share({
         title: "SVIT App",
         text: message,
+        url: apkUrl,
+      }).catch((error) => {
+        console.log("Share failed:", error);
+        // Fallback to download
+        window.open(apkUrl, '_blank');
       });
     } else {
+      // Fallback to download
+      const link = document.createElement('a');
+      link.href = apkUrl;
+      link.download = 'svit-app.apk';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
       toast({
-        title: "Info",
-        description: "Sharing not supported on this browser",
+        title: "Download Started",
+        description: "APK file is being downloaded",
       });
     }
+  };
+
+  const handleAboutUs = () => {
+    navigate("/about");
   };
 
   return (
@@ -647,6 +666,22 @@ export default function Settings() {
             </CardContent>
           </Card>
 
+          <Card className="shadow-lg border-primary/20 hover:shadow-xl transition-shadow cursor-pointer" onClick={handleAboutUs}>
+            <CardContent className="py-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold">About Us</h3>
+                  <p className="text-sm text-muted-foreground">Learn about our institution</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="shadow-lg border-primary/20 hover:shadow-xl transition-shadow cursor-pointer" onClick={handleContactUs}>
             <CardContent className="py-4">
               <div className="flex items-center gap-4">
@@ -656,9 +691,8 @@ export default function Settings() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold">Contact us</h3>
-                  <p className="text-sm text-muted-foreground">Suggestions, bugs, questions</p>
-                  <p className="text-xs text-muted-foreground mt-1">nishu0202081@gmail.com</p>
+                  <h3 className="font-semibold">Contact Us</h3>
+                  <p className="text-sm text-muted-foreground">Get in touch with support</p>
                 </div>
               </div>
             </CardContent>
