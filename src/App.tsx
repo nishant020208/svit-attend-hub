@@ -20,14 +20,15 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import CourseManagement from "./pages/CourseManagement";
 import StudentManagement from "./pages/StudentManagement";
+import AboutUs from "./pages/AboutUs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <TooltipProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/courses" element={<CourseManagement />} />
           <Route path="/students" element={<StudentManagement />} />
+          <Route path="/about" element={<AboutUs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
