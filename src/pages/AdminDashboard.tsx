@@ -65,37 +65,92 @@ export default function AdminDashboard() {
 
   const fetchAdminStats = async () => {
     try {
-      const [
-        { count: studentCount },
-        { count: facultyCount },
-        { count: parentCount },
-        { data: todayAttendanceData, count: totalStudentsToday },
-      ] = await Promise.all([
-        supabase.from("students").select("*", { count: "exact", head: true }),
-        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "FACULTY"),
-        supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "PARENT"),
-        supabase.from("attendance").select("*", { count: "exact" })
-          .eq("date", new Date().toISOString().split("T")[0]),
-      ]);
+      // Fetch students with proper count
+      const { data: studentsData, error: studentsError } = await supabase
+        .from("students")
+        .select("*");
+      
+      if (studentsError) {
+        console.error("Students fetch error:", studentsError);
+      }
+
+      const studentCount = studentsData?.length || 0;
+
+      // Fetch faculty count
+      const { data: facultyData, error: facultyError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "FACULTY");
+      
+      if (facultyError) {
+        console.error("Faculty fetch error:", facultyError);
+      }
+
+      const facultyCount = facultyData?.length || 0;
+
+      // Fetch parent count
+      const { data: parentData, error: parentError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "PARENT");
+      
+      if (parentError) {
+        console.error("Parent fetch error:", parentError);
+      }
+
+      const parentCount = parentData?.length || 0;
+
+      // Fetch today's attendance
+      const todayDate = new Date().toISOString().split("T")[0];
+      const { data: todayAttendanceData, error: attendanceError } = await supabase
+        .from("attendance")
+        .select("*")
+        .eq("date", todayDate);
+
+      if (attendanceError) {
+        console.error("Attendance fetch error:", attendanceError);
+      }
 
       const presentToday = todayAttendanceData?.filter(a => a.status === "PRESENT").length || 0;
-      const attendanceRate = totalStudentsToday ? Math.round((presentToday / totalStudentsToday) * 100) : 0;
+      const totalStudentsToday = todayAttendanceData?.length || 0;
+      const attendanceRate = totalStudentsToday > 0 ? Math.round((presentToday / totalStudentsToday) * 100) : 0;
 
-      const { count: pendingLeavesCount } = await supabase
+      // Fetch pending leaves
+      const { data: leavesData, error: leavesError } = await supabase
         .from("leave_requests")
-        .select("*", { count: "exact", head: true })
+        .select("*")
         .eq("status", "PENDING");
 
+      if (leavesError) {
+        console.error("Leaves fetch error:", leavesError);
+      }
+
+      const pendingLeavesCount = leavesData?.length || 0;
+
+      console.log("Admin Stats:", {
+        studentCount,
+        facultyCount,
+        parentCount,
+        presentToday,
+        attendanceRate,
+        pendingLeavesCount
+      });
+
       setStats({
-        totalStudents: studentCount || 0,
-        totalFaculty: facultyCount || 0,
-        totalParents: parentCount || 0,
+        totalStudents: studentCount,
+        totalFaculty: facultyCount,
+        totalParents: parentCount,
         todayAttendance: presentToday,
         attendanceRate,
-        pendingLeaves: pendingLeavesCount || 0,
+        pendingLeaves: pendingLeavesCount,
       });
     } catch (error) {
       console.error("Stats error:", error);
+      toast({
+        title: "Error fetching statistics",
+        description: "Some statistics may not be accurate",
+        variant: "destructive",
+      });
     }
   };
 
