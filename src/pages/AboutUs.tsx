@@ -49,7 +49,7 @@ export default function AboutUs() {
             </div>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent mb-2">
-            NISHANT SHAH   
+            Sarvajanik Vidyalaya Institute of Technology
           </h1>
           <p className="text-sm text-muted-foreground">( Version 1.0.23 )</p>
         </div>
@@ -93,7 +93,7 @@ export default function AboutUs() {
         </Card>
 
         {/* Requirements Card */}
-        <Card className="mb-6 shadow-premium border-primary/20">
+        <Card className="mb-6 shadow-premium border-primary/20 hover-scale transition-smooth animate-fade-in">
           <CardContent className="p-6">
             <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-primary" />

@@ -213,10 +213,10 @@ export default function LeaveManagement() {
             </h1>
             <p className="text-muted-foreground">Submit and track leave requests</p>
           </div>
-          {profile?.role === "STUDENT" && (
+          {profile?.role === "STUDENT" && studentId && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="gradient-primary">
+                <Button className="gradient-primary hover-scale transition-smooth">
                   <Plus className="mr-2 h-4 w-4" />
                   Request Leave
                 </Button>
@@ -277,7 +277,7 @@ export default function LeaveManagement() {
 
         <div className="space-y-4">
           {leaveRequests.map((request) => (
-            <Card key={request.id} className="shadow-lg hover:shadow-xl transition-shadow border-primary/20">
+            <Card key={request.id} className="shadow-lg hover:shadow-xl transition-smooth border-primary/20 animate-fade-in hover-scale">
               <CardHeader>
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
                   <div className="flex-1">
@@ -319,7 +319,7 @@ export default function LeaveManagement() {
                       <Button
                         size="sm"
                         onClick={() => handleUpdateLeaveStatus(request.id, "APPROVED", "Approved")}
-                        className="flex-1 min-w-[120px] gradient-primary"
+                        className="flex-1 min-w-[120px] gradient-primary hover-scale transition-smooth"
                       >
                         <CheckCircle className="mr-2 h-4 w-4" />
                         Approve
@@ -328,7 +328,7 @@ export default function LeaveManagement() {
                         size="sm"
                         variant="destructive"
                         onClick={() => handleUpdateLeaveStatus(request.id, "REJECTED", "Rejected")}
-                        className="flex-1 min-w-[120px]"
+                        className="flex-1 min-w-[120px] hover-scale transition-smooth"
                       >
                         <XCircle className="mr-2 h-4 w-4" />
                         Reject

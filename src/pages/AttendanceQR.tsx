@@ -114,16 +114,19 @@ export default function AttendanceQR() {
 
   const startScanning = async () => {
     try {
+      setScanning(true);
       const qrCode = new Html5Qrcode("qr-reader");
       setHtml5QrCode(qrCode);
-      setScanning(true);
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+      };
 
       await qrCode.start(
         { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-        },
+        config,
         async (decodedText) => {
           try {
             const qrPayload = JSON.parse(decodedText);
@@ -138,10 +141,16 @@ export default function AttendanceQR() {
           // Ignore scan errors
         }
       );
-    } catch (error: any) {
+
       toast({
-        title: "Error",
-        description: "Failed to start camera",
+        title: "Camera Started",
+        description: "Point your camera at the QR code",
+      });
+    } catch (error: any) {
+      console.error("Camera error:", error);
+      toast({
+        title: "Camera Error",
+        description: error.message || "Failed to start camera. Please check permissions.",
         variant: "destructive",
       });
       setScanning(false);
@@ -299,7 +308,7 @@ export default function AttendanceQR() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="shadow-lg">
+          <Card className="shadow-lg animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Scan className="h-5 w-5" />
@@ -307,18 +316,27 @@ export default function AttendanceQR() {
               </CardTitle>
               <CardDescription>Scan the QR code shown by your teacher</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div id="qr-reader" className={scanning ? "block" : "hidden"}></div>
+            <CardContent className="space-y-4">
+              <div 
+                id="qr-reader" 
+                className="w-full rounded-lg overflow-hidden border-2 border-border bg-black"
+                style={{ minHeight: scanning ? "400px" : "0", display: scanning ? "block" : "none" }}
+              />
               
               {!scanning ? (
-                <Button onClick={startScanning} className="w-full gradient-primary">
+                <Button onClick={startScanning} className="w-full gradient-primary hover-scale transition-smooth">
                   <Scan className="mr-2 h-4 w-4" />
-                  Start Scanning
+                  Start Camera to Scan
                 </Button>
               ) : (
-                <Button onClick={stopScanning} variant="destructive" className="w-full">
-                  Stop Scanning
-                </Button>
+                <>
+                  <p className="text-sm text-center text-muted-foreground animate-pulse">
+                    Camera is active. Point at QR code to scan.
+                  </p>
+                  <Button onClick={stopScanning} variant="destructive" className="w-full hover-scale transition-smooth">
+                    Stop Scanning
+                  </Button>
+                </>
               )}
             </CardContent>
           </Card>
