@@ -4,34 +4,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Calendar, GraduationCap, BookOpen, Phone, Mail, Globe } from "lucide-react";
-
 export default function AboutUs() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     checkAuth();
   }, []);
-
   const checkAuth = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) {
         navigate("/auth");
         return;
       }
-
       setUser(session.user);
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
+      const {
+        data: profileData
+      } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
       setProfile(profileData);
     } catch (error) {
       console.error("Auth error:", error);
@@ -40,13 +35,10 @@ export default function AboutUs() {
       setLoading(false);
     }
   };
-
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+  return <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
       <main className="container mx-auto p-4 md:p-6 max-w-3xl">
         {/* Header */}
@@ -57,9 +49,9 @@ export default function AboutUs() {
             </div>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent mb-2">
-            Bright School GSEB Harni
+            NISHANT SHAH   
           </h1>
-          <p className="text-sm text-muted-foreground">( Version 6.0.67 )</p>
+          <p className="text-sm text-muted-foreground">( Version 1.0.23 )</p>
         </div>
 
         {/* Sapphire Software Solution Card */}
@@ -70,14 +62,15 @@ export default function AboutUs() {
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-foreground">Sapphire Software Solution</h2>
+                <h2 className="text-xl font-bold text-foreground">NISHATT SOFTWARE  </h2>
                 <p className="text-sm text-muted-foreground">Software Solutions Provider</p>
               </div>
             </div>
 
             <div className="space-y-3 text-sm">
               <p className="text-foreground leading-relaxed">
-                C-102/103, Ganesh Meridian, Opp.Kargil Petrol Pump,<br />
+                
+              <br />
                 Nr. Gujarat High Court, S.G.Highway,<br />
                 Ahmedabad-380060, Gujarat, India.
               </p>
@@ -85,29 +78,16 @@ export default function AboutUs() {
               <div className="flex items-center gap-2 text-primary">
                 <Phone className="w-4 h-4" />
                 <span className="font-medium">Contact No.:</span>
-                <span>079 48486077/88 (Only for Technical Assistance)</span>
+                <span>7862859996(only for technical assistance)</span>
               </div>
 
               <div className="flex items-center gap-2 text-primary">
                 <Mail className="w-4 h-4" />
                 <span className="font-medium">E-mail:</span>
-                <a href="mailto:support@vidyalayaschoolsoftware.com" className="hover:underline">
-                  support@vidyalayaschoolsoftware.com
-                </a>
+                <a href="mailto:support@vidyalayaschoolsoftware.com" className="hover:underline">nishu0202081@gmail.com</a>
               </div>
 
-              <div className="flex items-center gap-2 text-primary">
-                <Globe className="w-4 h-4" />
-                <span className="font-medium">Web:</span>
-                <div className="flex flex-col">
-                  <a href="https://www.vidyalayaschoolsoftware.com" target="_blank" rel="noopener noreferrer" className="hover:underline">
-                    www.vidyalayaschoolsoftware.com
-                  </a>
-                  <a href="https://www.sapphiresolutions.net" target="_blank" rel="noopener noreferrer" className="hover:underline">
-                    www.sapphiresolutions.net
-                  </a>
-                </div>
-              </div>
+              
             </div>
           </CardContent>
         </Card>
@@ -163,7 +143,7 @@ export default function AboutUs() {
               <div className="flex items-start gap-3">
                 <Building2 className="w-5 h-5 text-primary mt-0.5" />
                 <div>
-                  <p className="font-medium text-foreground">BRIGHT SCHOOL - GSEB UNIT</p>
+                  <p className="font-medium text-foreground">sardar vallabhbhai patel institute of technology          </p>
                   <p className="text-muted-foreground">HARNI, VADODARA</p>
                 </div>
               </div>
@@ -178,6 +158,5 @@ export default function AboutUs() {
           </CardContent>
         </Card>
       </main>
-    </div>
-  );
+    </div>;
 }
