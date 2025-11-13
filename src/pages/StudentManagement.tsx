@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
+import { studentSchema, type StudentFormData } from "@/lib/validationSchemas";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,11 +17,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 export default function StudentManagement() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, loading: roleLoading, userId } = useUserRole();
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<any[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   
   // Filter states
   const [filterCourse, setFilterCourse] = useState<string>("all");
@@ -37,9 +40,11 @@ export default function StudentManagement() {
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [role, roleLoading]);
 
   const checkAuth = async () => {
+    if (roleLoading) return;
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -50,15 +55,7 @@ export default function StudentManagement() {
 
       setUser(session.user);
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      setProfile(profileData);
-
-      if (profileData?.role !== "ADMIN") {
+      if (role !== "ADMIN") {
         navigate("/dashboard");
         return;
       }
@@ -121,22 +118,42 @@ export default function StudentManagement() {
 
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!formData.email || !formData.name || !formData.rollNumber || !formData.course || !formData.year || !formData.section) {
-      toast({
-        title: "Error",
-        description: "Please fill all fields",
-        variant: "destructive",
+    setValidationErrors({});
+    
+    // Validate form data with zod
+    try {
+      const validatedData = studentSchema.parse({
+        ...formData,
+        year: parseInt(formData.year, 10),
       });
+      
+      await addStudentToDatabase(validatedData);
+    } catch (error: any) {
+      if (error.errors) {
+        const errors: Record<string, string> = {};
+        error.errors.forEach((err: any) => {
+          if (err.path[0]) {
+            errors[err.path[0]] = err.message;
+          }
+        });
+        setValidationErrors(errors);
+        toast({
+          title: "Validation Error",
+          description: "Please check the form for errors",
+          variant: "destructive",
+        });
+      }
       return;
     }
+  };
 
+  const addStudentToDatabase = async (validatedData: StudentFormData) => {
     try {
       // Check if email already exists in profiles
       const { data: existingProfile } = await supabase
         .from("profiles")
         .select("id, role")
-        .eq("email", formData.email)
+        .eq("email", validatedData.email)
         .maybeSingle();
 
       if (existingProfile && existingProfile.role === "STUDENT") {
@@ -161,10 +178,10 @@ export default function StudentManagement() {
           .from("students")
           .insert({
             user_id: existingProfile.id,
-            roll_number: formData.rollNumber,
-            course: formData.course,
-            year: parseInt(formData.year),
-            section: formData.section,
+            roll_number: validatedData.rollNumber,
+            course: validatedData.course,
+            year: validatedData.year,
+            section: validatedData.section,
           });
 
         if (studentError) throw studentError;
@@ -184,10 +201,10 @@ export default function StudentManagement() {
         const { error: whitelistError } = await supabase
           .from("whitelist")
           .insert({
-            email: formData.email,
-            name: formData.name,
+            email: validatedData.email,
+            name: validatedData.name,
             role: "STUDENT",
-            added_by: user.id,
+            added_by: userId,
           });
 
         if (whitelistError && !whitelistError.message.includes("duplicate")) {
@@ -244,7 +261,7 @@ export default function StudentManagement() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
+      <TopTabs userEmail={user?.email} userName={user?.user_metadata?.name} userRole={role || undefined} />
       <main className="container mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Student Management</h1>
@@ -322,7 +339,11 @@ export default function StudentManagement() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="student@example.com"
+                    className={validationErrors.email ? "border-red-500" : ""}
                   />
+                  {validationErrors.email && (
+                    <p className="text-sm text-red-500 mt-1">{validationErrors.email}</p>
+                  )}
                 </div>
                 <div>
                   <Label>Student Name</Label>
@@ -330,7 +351,11 @@ export default function StudentManagement() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="John Doe"
+                    className={validationErrors.name ? "border-red-500" : ""}
                   />
+                  {validationErrors.name && (
+                    <p className="text-sm text-red-500 mt-1">{validationErrors.name}</p>
+                  )}
                 </div>
                 <div>
                   <Label>Roll Number</Label>
@@ -338,7 +363,11 @@ export default function StudentManagement() {
                     value={formData.rollNumber}
                     onChange={(e) => setFormData({ ...formData, rollNumber: e.target.value })}
                     placeholder="2024001"
+                    className={validationErrors.rollNumber ? "border-red-500" : ""}
                   />
+                  {validationErrors.rollNumber && (
+                    <p className="text-sm text-red-500 mt-1">{validationErrors.rollNumber}</p>
+                  )}
                 </div>
                 <div>
                   <Label>Course</Label>

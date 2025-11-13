@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
+import { announcementSchema, validateFile, type AnnouncementFormData } from "@/lib/validationSchemas";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,8 +16,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 export default function Announcements() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, userId } = useUserRole();
   const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [title, setTitle] = useState("");
@@ -23,6 +25,11 @@ export default function Announcements() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // File validation constants
+  const ALLOWED_FILE_TYPES = ['application/pdf', 'text/csv', 'image/jpeg', 'image/png'];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
   useEffect(() => {
     checkAuth();
@@ -38,14 +45,6 @@ export default function Announcements() {
       }
 
       setUser(session.user);
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      setProfile(profileData);
       await fetchAnnouncements();
     } catch (error) {
       console.error("Auth error:", error);
@@ -75,13 +74,40 @@ export default function Announcements() {
   };
 
   const handleCreateAnnouncement = async () => {
-    if (!title || !content) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+    setValidationErrors({});
+
+    // Validate form data with zod
+    try {
+      announcementSchema.parse({ title, content });
+    } catch (error: any) {
+      if (error.errors) {
+        const errors: Record<string, string> = {};
+        error.errors.forEach((err: any) => {
+          if (err.path[0]) {
+            errors[err.path[0]] = err.message;
+          }
+        });
+        setValidationErrors(errors);
+        toast({
+          title: "Validation Error",
+          description: "Please check the form for errors",
+          variant: "destructive",
+        });
+      }
       return;
+    }
+
+    // Validate file if provided
+    if (uploadedFile) {
+      const fileValidation = validateFile(uploadedFile, ALLOWED_FILE_TYPES, MAX_FILE_SIZE);
+      if (!fileValidation.valid) {
+        toast({
+          title: "Invalid File",
+          description: fileValidation.error,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     try {
@@ -108,9 +134,9 @@ export default function Announcements() {
       const { error } = await supabase
         .from("announcements")
         .insert({
-          title,
-          content,
-          posted_by: user.id,
+          title: title.trim(),
+          content: content.trim(),
+          posted_by: userId,
           attachment_url: attachmentUrl,
         });
 
@@ -143,14 +169,14 @@ export default function Announcements() {
 
   return (
     <div className="min-h-screen bg-background">
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
+      <TopTabs userEmail={user?.email} userName={user?.user_metadata?.name} userRole={role || undefined} />
       <main className="container mx-auto p-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Announcements</h1>
             <p className="text-muted-foreground">Stay updated with latest notices</p>
           </div>
-          {profile?.role === "ADMIN" && (
+          {role === "ADMIN" && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
