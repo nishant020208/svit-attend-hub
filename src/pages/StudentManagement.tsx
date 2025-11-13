@@ -19,6 +19,12 @@ export default function StudentManagement() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<any[]>([]);
+  const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
+  
+  // Filter states
+  const [filterCourse, setFilterCourse] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>("all");
+  const [filterSection, setFilterSection] = useState<string>("all");
   
   const [formData, setFormData] = useState({
     email: "",
@@ -74,10 +80,14 @@ export default function StudentManagement() {
           *,
           profiles:user_id (name, email)
         `)
-        .order("created_at", { ascending: false });
+        .order("course", { ascending: true })
+        .order("year", { ascending: true })
+        .order("section", { ascending: true })
+        .order("roll_number", { ascending: true });
 
       if (error) throw error;
       setStudents(data || []);
+      setFilteredStudents(data || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -86,6 +96,28 @@ export default function StudentManagement() {
       });
     }
   };
+
+  // Apply filters whenever filter values or students change
+  useEffect(() => {
+    let filtered = [...students];
+
+    if (filterCourse !== "all") {
+      filtered = filtered.filter(s => s.course === filterCourse);
+    }
+    if (filterYear !== "all") {
+      filtered = filtered.filter(s => s.year.toString() === filterYear);
+    }
+    if (filterSection !== "all") {
+      filtered = filtered.filter(s => s.section === filterSection);
+    }
+
+    setFilteredStudents(filtered);
+  }, [students, filterCourse, filterYear, filterSection]);
+
+  // Get unique values for filters
+  const uniqueCourses = Array.from(new Set(students.map(s => s.course))).sort();
+  const uniqueYears = Array.from(new Set(students.map(s => s.year.toString()))).sort();
+  const uniqueSections = Array.from(new Set(students.map(s => s.section))).sort();
 
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,8 +248,64 @@ export default function StudentManagement() {
       <main className="container mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Student Management</h1>
-          <p className="text-muted-foreground">Add students to class lists</p>
+          <p className="text-muted-foreground">Add and manage students by class</p>
         </div>
+
+        {/* Filter Section */}
+        <Card className="glass-effect mb-6">
+          <CardHeader>
+            <CardTitle>Filter Students</CardTitle>
+            <CardDescription>Filter students by course, year, and section</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label>Course</Label>
+                <Select value={filterCourse} onValueChange={setFilterCourse}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Courses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Courses</SelectItem>
+                    {uniqueCourses.map(course => (
+                      <SelectItem key={course} value={course}>{course}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Year</Label>
+                <Select value={filterYear} onValueChange={setFilterYear}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Years" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Years</SelectItem>
+                    {uniqueYears.map(year => (
+                      <SelectItem key={year} value={year}>Year {year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Section</Label>
+                <Select value={filterSection} onValueChange={setFilterSection}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Sections" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sections</SelectItem>
+                    {uniqueSections.map(section => (
+                      <SelectItem key={section} value={section}>Section {section}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="glass-effect">
@@ -301,8 +389,12 @@ export default function StudentManagement() {
 
           <Card className="glass-effect">
             <CardHeader>
-              <CardTitle>Enrolled Students ({students.length})</CardTitle>
-              <CardDescription>All students in the system</CardDescription>
+              <CardTitle>Enrolled Students ({filteredStudents.length})</CardTitle>
+              <CardDescription>
+                {filterCourse !== "all" || filterYear !== "all" || filterSection !== "all" 
+                  ? `Showing filtered students` 
+                  : `All students in the system`}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -316,7 +408,7 @@ export default function StudentManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {students.map((student) => (
+                    {filteredStudents.map((student) => (
                       <TableRow key={student.id}>
                         <TableCell className="font-medium">{student.profiles?.name}</TableCell>
                         <TableCell>{student.roll_number}</TableCell>
@@ -336,8 +428,12 @@ export default function StudentManagement() {
                     ))}
                   </TableBody>
                 </Table>
-                {students.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">No students added yet</p>
+                {filteredStudents.length === 0 && (
+                  <p className="text-center text-muted-foreground py-8">
+                    {students.length === 0 
+                      ? "No students added yet" 
+                      : "No students match the selected filters"}
+                  </p>
                 )}
               </div>
             </CardContent>
