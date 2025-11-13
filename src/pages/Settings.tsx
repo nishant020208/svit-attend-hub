@@ -649,24 +649,8 @@ export default function Settings() {
         {/* App Section */}
         <div className="space-y-6 mt-8">
           <h2 className="text-xl font-semibold">App</h2>
-          
-          <Card className="shadow-lg border-primary/20 hover:shadow-xl transition-shadow cursor-pointer" onClick={handleShareApp}>
-            <CardContent className="py-4">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold">Share App</h3>
-                  <p className="text-sm text-muted-foreground">Share SVIT App with others</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card className="shadow-lg border-primary/20 hover:shadow-xl transition-shadow cursor-pointer" onClick={handleAboutUs}>
+          <Card className="shadow-lg border-primary/20 hover:shadow-xl transition-smooth cursor-pointer hover-scale" onClick={handleAboutUs}>
             <CardContent className="py-4">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-full bg-primary/10">
@@ -682,7 +666,7 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-primary/20 hover:shadow-xl transition-shadow cursor-pointer" onClick={handleContactUs}>
+          <Card className="shadow-lg border-primary/20 hover:shadow-xl transition-smooth cursor-pointer hover-scale" onClick={handleContactUs}>
             <CardContent className="py-4">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-full bg-primary/10">

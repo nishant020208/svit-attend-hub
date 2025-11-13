@@ -38,14 +38,14 @@ export function AppMenu({ userRole }: AppMenuProps) {
       { icon: BookOpen, label: "Reports", path: "/reports" },
     ];
 
-    // Teachers/Faculty and Admin get attendance access
+    // Teachers/Faculty and Admin get attendance and student management access
     if (userRole === "FACULTY" || userRole === "ADMIN") {
       items.splice(2, 0, { icon: ClipboardList, label: "Attendance", path: "/attendance" });
+      items.push({ icon: Users, label: "Student Management", path: "/students" });
     }
 
     if (userRole === "ADMIN") {
       items.push({ icon: Users, label: "Course Management", path: "/courses" });
-      items.push({ icon: Users, label: "Student Management", path: "/students" });
     }
 
     return items;
