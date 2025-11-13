@@ -152,11 +152,20 @@ export default function StudentManagement() {
       // Check if email already exists in profiles
       const { data: existingProfile } = await supabase
         .from("profiles")
-        .select("id, role")
+        .select("id")
         .eq("email", validatedData.email)
         .maybeSingle();
 
-      if (existingProfile && existingProfile.role === "STUDENT") {
+      if (existingProfile) {
+        // Check if user has STUDENT role in user_roles table
+        const { data: existingRole } = await (supabase as any)
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", existingProfile.id)
+          .eq("role", "STUDENT")
+          .maybeSingle();
+
+        if (existingRole) {
         // Profile exists, check if student record exists
         const { data: existingStudent } = await supabase
           .from("students")
@@ -190,6 +199,13 @@ export default function StudentManagement() {
           title: "Success",
           description: "Student added to class list successfully",
         });
+        } else {
+          toast({
+            title: "Info",
+            description: "Profile exists but user is not a student. Cannot add to class list.",
+            variant: "default",
+          });
+        }
       } else {
         toast({
           title: "Info",
