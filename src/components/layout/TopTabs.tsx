@@ -48,6 +48,11 @@ const tabs = [{
   icon: FileText,
   roles: ["ADMIN", "FACULTY", "STUDENT"]
 }, {
+  name: "Students",
+  path: "/students",
+  icon: Settings,
+  roles: ["ADMIN", "FACULTY"]
+}, {
   name: "Courses",
   path: "/courses",
   icon: Settings,
