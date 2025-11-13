@@ -38,8 +38,8 @@ export function AppMenu({ userRole }: AppMenuProps) {
       { icon: BookOpen, label: "Reports", path: "/reports" },
     ];
 
-    // Teachers/Faculty get attendance access, not Admin
-    if (userRole === "FACULTY") {
+    // Teachers/Faculty and Admin get attendance access
+    if (userRole === "FACULTY" || userRole === "ADMIN") {
       items.splice(2, 0, { icon: ClipboardList, label: "Attendance", path: "/attendance" });
     }
 
