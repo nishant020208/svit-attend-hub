@@ -11,6 +11,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Upload } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Papa from "papaparse";
+import { z } from "zod";
+
+// CSV Whitelist Entry Validation
+const csvWhitelistSchema = z.object({
+  email: z.string().trim().email().max(255),
+  name: z.string().trim().min(1).max(100),
+  role: z.enum(["STUDENT", "FACULTY", "PARENT", "ADMIN"]),
+});
+
+type CSVWhitelistEntry = z.infer<typeof csvWhitelistSchema>;
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -276,22 +286,55 @@ export default function Settings() {
       header: true,
       complete: async (results) => {
         try {
-          const records = results.data.map((row: any) => ({
-            email: row.email,
-            name: row.name,
-            role: row.role || "STUDENT",
-            added_by: user.id,
-          })).filter(r => r.email && r.name);
+          const validatedRecords: CSVWhitelistEntry[] = [];
+          const errors: string[] = [];
+
+          // Validate each row
+          results.data.forEach((row: any, index: number) => {
+            try {
+              const validated = csvWhitelistSchema.parse({
+                email: row.email,
+                name: row.name,
+                role: row.role || "STUDENT",
+              });
+              validatedRecords.push(validated);
+            } catch (error: any) {
+              errors.push(`Row ${index + 1}: ${error.errors[0]?.message || 'Invalid data'}`);
+            }
+          });
+
+          if (errors.length > 0) {
+            toast({
+              title: "Validation Errors",
+              description: `${errors.length} rows have errors. First error: ${errors[0]}`,
+              variant: "destructive",
+            });
+            return;
+          }
+
+          if (validatedRecords.length === 0) {
+            toast({
+              title: "Error",
+              description: "No valid records found in CSV",
+              variant: "destructive",
+            });
+            return;
+          }
 
           const { error } = await supabase
             .from("whitelist")
-            .insert(records);
+            .insert(validatedRecords.map(r => ({
+              email: r.email,
+              name: r.name,
+              role: r.role,
+              added_by: user.id,
+            })));
 
           if (error) throw error;
 
           toast({
             title: "Success",
-            description: `${records.length} users added to whitelist`,
+            description: `${validatedRecords.length} users added to whitelist`,
           });
 
           setCsvFile(null);
