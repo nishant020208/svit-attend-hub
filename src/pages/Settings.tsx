@@ -29,6 +29,7 @@ export default function Settings() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [whitelist, setWhitelist] = useState<any[]>([]);
+  const [registeredUsers, setRegisteredUsers] = useState<any[]>([]);
   
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
@@ -88,6 +89,7 @@ export default function Settings() {
 
       if (profileData?.role === "ADMIN") {
         fetchWhitelist();
+        fetchRegisteredUsers();
       }
 
       if (profileData?.role === "PARENT") {
@@ -208,6 +210,29 @@ export default function Settings() {
     }
   };
 
+  const fetchRegisteredUsers = async () => {
+    try {
+      // Fetch all profiles with their roles from user_roles table
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          email,
+          name,
+          first_name,
+          last_name,
+          created_at,
+          user_roles (role)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setRegisteredUsers(data || []);
+    } catch (error: any) {
+      console.error("Error fetching registered users:", error);
+    }
+  };
+
   const handleAddToWhitelist = async () => {
     if (!newEmail || !newName) {
       toast({
@@ -239,6 +264,7 @@ export default function Settings() {
       setNewName("");
       setNewRole("STUDENT");
       fetchWhitelist();
+      fetchRegisteredUsers();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -634,6 +660,39 @@ export default function Settings() {
                   ))}
                   {whitelist.length === 0 && (
                     <p className="text-muted-foreground text-center py-8">No whitelisted users</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lg mb-6">
+              <CardHeader>
+                <CardTitle>Registered Users</CardTitle>
+                <CardDescription>{registeredUsers.length} users registered from whitelist</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {registeredUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium">{user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'No Name'}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <div className="flex gap-2 items-center">
+                          <p className="text-xs text-primary font-semibold">
+                            {user.user_roles?.[0]?.role || 'No Role'}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            • Registered: {new Date(user.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {registeredUsers.length === 0 && (
+                    <p className="text-muted-foreground text-center py-8">No registered users yet</p>
                   )}
                 </div>
               </CardContent>
