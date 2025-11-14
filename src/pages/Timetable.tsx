@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Trash2, Upload, Clock, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function Timetable() {
   const navigate = useNavigate();
@@ -22,6 +24,9 @@ export default function Timetable() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [studentData, setStudentData] = useState<any>(null);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
   const [newEntry, setNewEntry] = useState({
     day_of_week: "",
     start_time: "",
@@ -56,6 +61,13 @@ export default function Timetable() {
 
       setProfile(profileData);
 
+      // Fetch subjects, courses, and sections
+      await Promise.all([
+        fetchSubjects(),
+        fetchCourses(),
+        fetchSections()
+      ]);
+
       // If student, get their course/section/year
       if (profileData?.role === "STUDENT") {
         const { data: studentData } = await supabase
@@ -65,9 +77,10 @@ export default function Timetable() {
           .single();
         
         setStudentData(studentData);
+        await fetchTimetable(profileData, session.user.id, studentData);
+      } else {
+        await fetchTimetable(profileData, session.user.id);
       }
-
-      fetchTimetable(profileData, session.user.id);
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/auth");
@@ -76,24 +89,55 @@ export default function Timetable() {
     }
   };
 
-  const fetchTimetable = async (profileData: any, userId: string) => {
+  const fetchSubjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("subjects")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      setSubjects(data || []);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      setCourses(data || []);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("sections")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      setSections(data || []);
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+    }
+  };
+
+  const fetchTimetable = async (profileData: any, userId: string, studentData?: any) => {
     try {
       let query = supabase.from("timetable").select("*");
 
       // Students see only their timetable
-      if (profileData?.role === "STUDENT") {
-        const { data: studentData } = await supabase
-          .from("students")
-          .select("*")
-          .eq("user_id", userId)
-          .single();
-
-        if (studentData) {
-          query = query
-            .eq("course", studentData.course)
-            .eq("section", studentData.section)
-            .eq("year", studentData.year);
-        }
+      if (profileData?.role === "STUDENT" && studentData) {
+        query = query
+          .eq("course", studentData.course)
+          .eq("section", studentData.section)
+          .eq("year", studentData.year);
       }
 
       const { data, error } = await query.order("day_of_week").order("start_time");
@@ -117,7 +161,7 @@ export default function Timetable() {
         start_time: newEntry.start_time,
         end_time: newEntry.end_time,
         subject: newEntry.subject,
-        room: newEntry.room,
+        room: newEntry.room || null,
         course: newEntry.course,
         section: newEntry.section,
         year: parseInt(newEntry.year),
@@ -126,7 +170,7 @@ export default function Timetable() {
 
       if (error) throw error;
 
-      toast.success("Timetable entry added successfully");
+      toast.success("Timetable entry created successfully");
       setNewEntry({
         day_of_week: "",
         start_time: "",
@@ -138,27 +182,29 @@ export default function Timetable() {
         year: "",
       });
       setDialogOpen(false);
-      fetchTimetable(profile, user.id);
+      fetchTimetable(profile, user.id, studentData);
     } catch (error: any) {
       console.error("Error creating timetable entry:", error);
-      toast.error(error.message || "Failed to add timetable entry");
+      toast.error(error.message || "Failed to create timetable entry");
     }
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this entry?")) return;
+
     try {
-      const { error } = await supabase.from("timetable").delete().eq("id", id);
+      const { error } = await supabase
+        .from("timetable")
+        .delete()
+        .eq("id", id);
+
       if (error) throw error;
-      toast.success("Timetable entry deleted");
-      fetchTimetable(profile, user.id);
+
+      toast.success("Entry deleted successfully");
+      fetchTimetable(profile, user.id, studentData);
     } catch (error: any) {
       toast.error(error.message || "Failed to delete entry");
     }
-  };
-
-  const getDayName = (day: number) => {
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    return days[day];
   };
 
   const handleCSVUpload = async () => {
@@ -169,42 +215,68 @@ export default function Timetable() {
 
     Papa.parse(csvFile, {
       header: true,
+      skipEmptyLines: true,
       complete: async (results) => {
-        try {
-          const records = results.data.map((row: any) => ({
+        const entries = results.data
+          .filter((row: any) => row.day_of_week && row.start_time && row.end_time && row.subject)
+          .map((row: any) => ({
             day_of_week: parseInt(row.day_of_week),
             start_time: row.start_time,
             end_time: row.end_time,
             subject: row.subject,
-            room: row.room,
+            room: row.room || null,
             course: row.course,
             section: row.section,
             year: parseInt(row.year),
             faculty_id: user.id,
-          })).filter(r => r.day_of_week && r.start_time && r.end_time && r.subject && r.course && r.section && r.year);
+          }));
 
-          const { error } = await supabase
-            .from("timetable")
-            .insert(records);
+        if (entries.length === 0) {
+          toast.error("No valid entries found in CSV");
+          return;
+        }
+
+        try {
+          const { error } = await supabase.from("timetable").insert(entries);
 
           if (error) throw error;
 
-          toast.success(`${records.length} timetable entries added`);
+          toast.success(`Successfully uploaded ${entries.length} entries`);
           setCsvFile(null);
-          fetchTimetable(profile, user.id);
+          fetchTimetable(profile, user.id, studentData);
         } catch (error: any) {
+          console.error("Error uploading CSV:", error);
           toast.error(error.message || "Failed to upload CSV");
         }
       },
-      error: (error) => {
+      error: () => {
         toast.error("Failed to parse CSV file");
       },
     });
   };
 
+  const getDayName = (day: number) => {
+    const days = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    return days[day] || "";
+  };
+
+  const getTimetableByDay = () => {
+    const byDay: { [key: number]: any[] } = {};
+    timetable.forEach((entry) => {
+      if (!byDay[entry.day_of_week]) {
+        byDay[entry.day_of_week] = [];
+      }
+      byDay[entry.day_of_week].push(entry);
+    });
+    return byDay;
+  };
+
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+    return <LoadingSpinner />;
   }
+
+  const timetableByDay = getTimetableByDay();
+  const isStudent = profile?.role === "STUDENT";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -229,7 +301,7 @@ export default function Timetable() {
                     Add Entry
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add Timetable Entry</DialogTitle>
                 </DialogHeader>
@@ -256,11 +328,21 @@ export default function Timetable() {
                     </div>
                     <div className="space-y-2">
                       <Label>Subject</Label>
-                      <Input
+                      <Select
                         value={newEntry.subject}
-                        onChange={(e) => setNewEntry({ ...newEntry, subject: e.target.value })}
-                        placeholder="e.g., Mathematics"
-                      />
+                        onValueChange={(value) => setNewEntry({ ...newEntry, subject: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select subject" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subjects.map((subject) => (
+                            <SelectItem key={subject.id} value={subject.name}>
+                              {subject.name} ({subject.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -284,28 +366,56 @@ export default function Timetable() {
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label>Course</Label>
-                      <Input
+                      <Select
                         value={newEntry.course}
-                        onChange={(e) => setNewEntry({ ...newEntry, course: e.target.value })}
-                        placeholder="e.g., B.Tech"
-                      />
+                        onValueChange={(value) => setNewEntry({ ...newEntry, course: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select course" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {courses.map((course) => (
+                            <SelectItem key={course.id} value={course.name}>
+                              {course.name} ({course.code})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label>Section</Label>
-                      <Input
+                      <Select
                         value={newEntry.section}
-                        onChange={(e) => setNewEntry({ ...newEntry, section: e.target.value })}
-                        placeholder="e.g., A"
-                      />
+                        onValueChange={(value) => setNewEntry({ ...newEntry, section: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select section" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sections.map((section) => (
+                            <SelectItem key={section.id} value={section.name}>
+                              {section.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label>Year</Label>
-                      <Input
-                        type="number"
+                      <Select
                         value={newEntry.year}
-                        onChange={(e) => setNewEntry({ ...newEntry, year: e.target.value })}
-                        placeholder="e.g., 1"
-                      />
+                        onValueChange={(value) => setNewEntry({ ...newEntry, year: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">Year 1</SelectItem>
+                          <SelectItem value="2">Year 2</SelectItem>
+                          <SelectItem value="3">Year 3</SelectItem>
+                          <SelectItem value="4">Year 4</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -327,7 +437,7 @@ export default function Timetable() {
           </div>
           
           {profile?.role === "ADMIN" && (
-            <Card className="glass-effect">
+            <Card className="glass-effect mb-6">
               <CardHeader>
                 <CardTitle>Bulk Upload</CardTitle>
                 <CardDescription>Upload multiple timetable entries via CSV file</CardDescription>
@@ -353,104 +463,160 @@ export default function Timetable() {
           )}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Weekly Schedule</CardTitle>
-            <CardDescription>Class timetable</CardDescription>
-          </CardHeader>
-          <CardContent>
+        {isStudent ? (
+          // Student View - Fancy Day-by-Day Cards
+          <div className="space-y-6">
             {timetable.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No timetable entries found</p>
+              <Card className="glass-effect">
+                <CardContent className="py-12">
+                  <p className="text-muted-foreground text-center">No timetable entries found</p>
+                </CardContent>
+              </Card>
             ) : (
-              <>
-                {/* Desktop Table View */}
-                <div className="hidden md:block overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Day</TableHead>
-                        <TableHead>Time</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Room</TableHead>
-                        {profile?.role === "ADMIN" && <TableHead>Course/Section</TableHead>}
-                        {profile?.role === "ADMIN" && <TableHead>Actions</TableHead>}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {timetable.map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell className="font-medium">{getDayName(entry.day_of_week)}</TableCell>
-                          <TableCell>
-                            {entry.start_time} - {entry.end_time}
-                          </TableCell>
-                          <TableCell>{entry.subject}</TableCell>
-                          <TableCell>{entry.room || "—"}</TableCell>
-                          {profile?.role === "ADMIN" && (
-                            <TableCell>
-                              {entry.course} - {entry.section} (Year {entry.year})
-                            </TableCell>
-                          )}
-                          {profile?.role === "ADMIN" && (
-                            <TableCell>
+              <Tabs defaultValue="1" className="w-full">
+                <TabsList className="grid w-full grid-cols-6 lg:w-auto">
+                  {[1, 2, 3, 4, 5, 6].map((day) => (
+                    <TabsTrigger key={day} value={day.toString()}>
+                      {getDayName(day).substring(0, 3)}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {[1, 2, 3, 4, 5, 6].map((day) => (
+                  <TabsContent key={day} value={day.toString()} className="mt-6">
+                    <Card className="glass-effect shadow-xl">
+                      <CardHeader>
+                        <CardTitle className="text-2xl">{getDayName(day)}</CardTitle>
+                        <CardDescription>
+                          {timetableByDay[day]?.length || 0} {(timetableByDay[day]?.length || 0) === 1 ? 'class' : 'classes'} scheduled
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {timetableByDay[day] && timetableByDay[day].length > 0 ? (
+                          timetableByDay[day].map((entry, idx) => (
+                            <Card key={idx} className="border-l-4 border-l-primary bg-gradient-to-r from-primary/5 to-transparent hover:shadow-lg transition-all">
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex-1">
+                                    <h3 className="font-bold text-lg text-foreground mb-2">{entry.subject}</h3>
+                                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                                      <div className="flex items-center gap-1">
+                                        <Clock className="h-4 w-4" />
+                                        <span>{entry.start_time} - {entry.end_time}</span>
+                                      </div>
+                                      {entry.room && (
+                                        <div className="flex items-center gap-1">
+                                          <MapPin className="h-4 w-4" />
+                                          <span>{entry.room}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))
+                        ) : (
+                          <p className="text-muted-foreground text-center py-8">No classes scheduled for this day</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            )}
+          </div>
+        ) : (
+          // Admin/Faculty View - Table
+          <Card>
+            <CardHeader>
+              <CardTitle>Weekly Schedule</CardTitle>
+              <CardDescription>Class timetable</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {timetable.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No timetable entries found</p>
+              ) : (
+                <>
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Day</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Subject</TableHead>
+                          <TableHead>Room</TableHead>
+                          <TableHead>Course</TableHead>
+                          <TableHead>Section</TableHead>
+                          <TableHead>Year</TableHead>
+                          {profile?.role === "ADMIN" && <TableHead>Actions</TableHead>}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {timetable.map((entry) => (
+                          <TableRow key={entry.id}>
+                            <TableCell className="font-medium">{getDayName(entry.day_of_week)}</TableCell>
+                            <TableCell>{entry.start_time} - {entry.end_time}</TableCell>
+                            <TableCell>{entry.subject}</TableCell>
+                            <TableCell>{entry.room || "-"}</TableCell>
+                            <TableCell>{entry.course}</TableCell>
+                            <TableCell>{entry.section}</TableCell>
+                            <TableCell>{entry.year}</TableCell>
+                            {profile?.role === "ADMIN" && (
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(entry.id)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="md:hidden space-y-4">
+                    {timetable.map((entry) => (
+                      <Card key={entry.id} className="border-l-4 border-l-primary">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="font-bold text-lg">{entry.subject}</p>
+                              <p className="text-sm text-muted-foreground">{getDayName(entry.day_of_week)}</p>
+                            </div>
+                            {profile?.role === "ADMIN" && (
                               <Button
-                                variant="destructive"
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => handleDelete(entry.id)}
+                                className="text-destructive hover:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Mobile Card View */}
-                <div className="md:hidden space-y-3">
-                  {timetable.map((entry) => (
-                    <Card key={entry.id} className="glass-effect">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-lg">{entry.subject}</h3>
-                            <p className="text-sm text-muted-foreground">{getDayName(entry.day_of_week)}</p>
+                            )}
                           </div>
-                          {profile?.role === "ADMIN" && (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDelete(entry.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Time:</span>
-                            <span className="font-medium">{entry.start_time} - {entry.end_time}</span>
+                          <div className="space-y-1 text-sm">
+                            <p><span className="font-medium">Time:</span> {entry.start_time} - {entry.end_time}</p>
+                            {entry.room && <p><span className="font-medium">Room:</span> {entry.room}</p>}
+                            <p><span className="font-medium">Course:</span> {entry.course}</p>
+                            <p><span className="font-medium">Section:</span> {entry.section}</p>
+                            <p><span className="font-medium">Year:</span> {entry.year}</p>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Room:</span>
-                            <span className="font-medium">{entry.room || "—"}</span>
-                          </div>
-                          {profile?.role === "ADMIN" && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Class:</span>
-                              <span className="font-medium">{entry.course} - {entry.section} (Year {entry.year})</span>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );
