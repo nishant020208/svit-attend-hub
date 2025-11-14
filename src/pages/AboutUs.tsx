@@ -49,7 +49,7 @@ export default function AboutUs() {
             </div>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent mb-2">
-            Sarvajanik Vidyalaya Institute of Technology
+            Nishant shah 
           </h1>
           <p className="text-sm text-muted-foreground">( Version 1.0.23 )</p>
         </div>
@@ -144,7 +144,7 @@ export default function AboutUs() {
                 <Building2 className="w-5 h-5 text-primary mt-0.5" />
                 <div>
                   <p className="font-medium text-foreground">sardar vallabhbhai patel institute of technology          </p>
-                  <p className="text-muted-foreground">HARNI, VADODARA</p>
+                  <p className="text-muted-foreground">VASAD</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
