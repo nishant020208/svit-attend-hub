@@ -19,9 +19,9 @@ export function ThemeToggle() {
           size="icon"
           className="relative hover-glow transition-smooth"
         >
-          <Sun className={`h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all ${theme === 'dark' || theme === 'vibrant' ? '-rotate-90 scale-0' : ''}`} />
-          <Moon className={`absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all ${theme === 'dark' ? 'rotate-0 scale-100' : ''} ${theme === 'vibrant' ? 'scale-0' : ''}`} />
-          <Sparkles className={`absolute h-[1.2rem] w-[1.2rem] scale-0 transition-all ${theme === 'vibrant' ? 'scale-100' : ''}`} />
+          <Sun className={`h-[1.2rem] w-[1.2rem] transition-all duration-300 ${theme !== 'light' ? 'rotate-90 scale-0' : 'rotate-0 scale-100'}`} />
+          <Moon className={`absolute h-[1.2rem] w-[1.2rem] transition-all duration-300 ${theme !== 'dark' ? 'rotate-90 scale-0' : 'rotate-0 scale-100'}`} />
+          <Sparkles className={`absolute h-[1.2rem] w-[1.2rem] transition-all duration-300 ${theme !== 'vibrant' ? 'rotate-90 scale-0' : 'rotate-0 scale-100'}`} />
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
