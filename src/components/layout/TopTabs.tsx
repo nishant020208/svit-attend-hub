@@ -58,6 +58,11 @@ const tabs = [{
   icon: Settings,
   roles: ["ADMIN"]
 }, {
+  name: "Subjects",
+  path: "/subjects",
+  icon: Settings,
+  roles: ["ADMIN"]
+}, {
   name: "Settings",
   path: "/settings",
   icon: Settings,
