@@ -20,6 +20,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import CourseManagement from "./pages/CourseManagement";
 import SubjectManagement from "./pages/SubjectManagement";
+import Notifications from "./pages/Notifications";
 import StudentManagement from "./pages/StudentManagement";
 import AboutUs from "./pages/AboutUs";
 import NotFound from "./pages/NotFound";
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/courses" element={<CourseManagement />} />
           <Route path="/subjects" element={<SubjectManagement />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/students" element={<StudentManagement />} />
           <Route path="/about" element={<AboutUs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
