@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut, GraduationCap, Bell, Users, BookOpen, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -38,6 +38,11 @@ const tabs = [{
   icon: Calendar,
   roles: ["ADMIN", "FACULTY", "STUDENT"]
 }, {
+  name: "Results",
+  path: "/results",
+  icon: GraduationCap,
+  roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"]
+}, {
   name: "Announcements",
   path: "/announcements",
   icon: Megaphone,
@@ -46,26 +51,26 @@ const tabs = [{
   name: "Reports",
   path: "/reports",
   icon: FileText,
-  roles: ["ADMIN", "FACULTY", "STUDENT"]
+  roles: ["ADMIN", "FACULTY"]
 }, {
   name: "Notifications",
   path: "/notifications",
-  icon: Settings,
+  icon: Bell,
   roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"]
 }, {
   name: "Students",
   path: "/students",
-  icon: Settings,
+  icon: Users,
   roles: ["ADMIN", "FACULTY"]
 }, {
   name: "Courses",
   path: "/courses",
-  icon: Settings,
+  icon: BookOpen,
   roles: ["ADMIN"]
 }, {
   name: "Subjects",
   path: "/subjects",
-  icon: Settings,
+  icon: Layers,
   roles: ["ADMIN"]
 }, {
   name: "Settings",
