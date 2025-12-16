@@ -17,6 +17,7 @@ import LeaveManagement from "./pages/LeaveManagement";
 import Timetable from "./pages/Timetable";
 import Announcements from "./pages/Announcements";
 import Reports from "./pages/Reports";
+import Results from "./pages/Results";
 import Settings from "./pages/Settings";
 import CourseManagement from "./pages/CourseManagement";
 import SubjectManagement from "./pages/SubjectManagement";
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/timetable" element={<Timetable />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/results" element={<Results />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/courses" element={<CourseManagement />} />
           <Route path="/subjects" element={<SubjectManagement />} />
