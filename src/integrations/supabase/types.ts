@@ -121,6 +121,84 @@ export type Database = {
         }
         Relationships: []
       }
+      exams: {
+        Row: {
+          course: string
+          created_at: string
+          created_by: string | null
+          exam_date: string | null
+          exam_type: string
+          id: string
+          max_marks: number
+          name: string
+          passing_marks: number
+          section: string
+          subject: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          course: string
+          created_at?: string
+          created_by?: string | null
+          exam_date?: string | null
+          exam_type?: string
+          id?: string
+          max_marks?: number
+          name: string
+          passing_marks?: number
+          section: string
+          subject: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          course?: string
+          created_at?: string
+          created_by?: string | null
+          exam_date?: string | null
+          exam_type?: string
+          id?: string
+          max_marks?: number
+          name?: string
+          passing_marks?: number
+          section?: string
+          subject?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      grade_config: {
+        Row: {
+          created_at: string
+          description: string | null
+          grade: string
+          grade_points: number
+          id: string
+          max_percentage: number
+          min_percentage: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          grade: string
+          grade_points?: number
+          id?: string
+          max_percentage: number
+          min_percentage: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          grade?: string
+          grade_points?: number
+          id?: string
+          max_percentage?: number
+          min_percentage?: number
+        }
+        Relationships: []
+      }
       leave_requests: {
         Row: {
           created_at: string
@@ -303,6 +381,63 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      results: {
+        Row: {
+          created_at: string
+          entered_by: string | null
+          exam_id: string
+          grade: string | null
+          id: string
+          marks_obtained: number
+          max_marks: number
+          percentage: number | null
+          remarks: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entered_by?: string | null
+          exam_id: string
+          grade?: string | null
+          id?: string
+          marks_obtained: number
+          max_marks?: number
+          percentage?: number | null
+          remarks?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entered_by?: string | null
+          exam_id?: string
+          grade?: string | null
+          id?: string
+          marks_obtained?: number
+          max_marks?: number
+          percentage?: number | null
+          remarks?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "results_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sections: {
         Row: {
