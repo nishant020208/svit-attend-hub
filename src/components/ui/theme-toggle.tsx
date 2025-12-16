@@ -10,7 +10,7 @@ import {
 import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,12 @@ export function ThemeToggle() {
     );
   }
 
-  const currentTheme = theme || resolvedTheme;
+  const currentTheme = theme ?? "light";
+  const handleSelect = (next: "light" | "dark" | "vibrant") => (e: Event) => {
+    // Radix uses onSelect; prevent default so it doesn't interfere with focus handling
+    e.preventDefault();
+    setTheme(next);
+  };
 
   return (
     <DropdownMenu>
@@ -37,27 +42,29 @@ export function ThemeToggle() {
         >
           {currentTheme === "light" && <Sun className="h-[1.2rem] w-[1.2rem] text-primary-foreground" />}
           {currentTheme === "dark" && <Moon className="h-[1.2rem] w-[1.2rem] text-primary-foreground" />}
-          {currentTheme === "vibrant" && <Sparkles className="h-[1.2rem] w-[1.2rem] text-primary-foreground animate-pulse" />}
+          {currentTheme === "vibrant" && (
+            <Sparkles className="h-[1.2rem] w-[1.2rem] text-primary-foreground animate-pulse" />
+          )}
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="z-50 bg-card border border-border shadow-lg">
-        <DropdownMenuItem 
-          onClick={() => setTheme("light")} 
+        <DropdownMenuItem
+          onSelect={handleSelect("light")}
           className={`cursor-pointer ${currentTheme === "light" ? "bg-primary/10 text-primary" : ""}`}
         >
           <Sun className="mr-2 h-4 w-4" />
           <span>Light</span>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setTheme("dark")} 
+        <DropdownMenuItem
+          onSelect={handleSelect("dark")}
           className={`cursor-pointer ${currentTheme === "dark" ? "bg-primary/10 text-primary" : ""}`}
         >
           <Moon className="mr-2 h-4 w-4" />
           <span>Dark</span>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setTheme("vibrant")} 
+        <DropdownMenuItem
+          onSelect={handleSelect("vibrant")}
           className={`cursor-pointer ${currentTheme === "vibrant" ? "bg-primary/10 text-primary" : ""}`}
         >
           <Sparkles className="mr-2 h-4 w-4" />
