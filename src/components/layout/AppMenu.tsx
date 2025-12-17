@@ -38,9 +38,13 @@ export function AppMenu({ userRole }: AppMenuProps) {
       { icon: BookOpen, label: "Reports", path: "/reports" },
     ];
 
-    // Teachers/Faculty and Admin get attendance and student management access
+    // Teachers/Faculty and Admin get attendance access
     if (userRole === "FACULTY" || userRole === "ADMIN") {
       items.splice(2, 0, { icon: ClipboardList, label: "Attendance", path: "/attendance" });
+    }
+
+    // Only Admin gets student management
+    if (userRole === "ADMIN") {
       items.push({ icon: Users, label: "Student Management", path: "/students" });
     }
 

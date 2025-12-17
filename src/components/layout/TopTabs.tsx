@@ -61,7 +61,7 @@ const tabs = [{
   name: "Students",
   path: "/students",
   icon: Users,
-  roles: ["ADMIN", "FACULTY"]
+  roles: ["ADMIN"]
 }, {
   name: "Courses",
   path: "/courses",
