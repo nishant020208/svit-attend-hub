@@ -10,7 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, GraduationCap, User, Users, Shield, Cpu, Cog, Zap, CircuitBoard, Sparkles } from "lucide-react";
+import { 
+  Loader2, GraduationCap, User, Users, Shield, Cpu, Cog, Zap, CircuitBoard, Sparkles,
+  Wifi, Monitor, HardDrive, Database, Server, Radio, Microchip, Binary, Code, Terminal,
+  Laptop, Smartphone, Cable, Power, Battery, Lightbulb, Gauge, Settings, Wrench, BookOpen
+} from "lucide-react";
 import svitLogo from "@/assets/svit-logo-official.jpg";
 import { ForgotPassword } from "./ForgotPassword";
 
@@ -176,14 +180,47 @@ export function RoleBasedAuthForm() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-3xl" />
       
-      {/* Engineering Floating Icons */}
-      <FloatingIcon icon={Cpu} className="w-16 h-16 top-[10%] left-[10%]" delay="0s" />
-      <FloatingIcon icon={Cog} className="w-20 h-20 top-[15%] right-[15%]" delay="0.5s" />
-      <FloatingIcon icon={Zap} className="w-12 h-12 bottom-[20%] left-[20%]" delay="1s" />
-      <FloatingIcon icon={CircuitBoard} className="w-24 h-24 bottom-[15%] right-[10%]" delay="1.5s" />
-      <FloatingIcon icon={GraduationCap} className="w-14 h-14 top-[40%] left-[5%]" delay="2s" />
-      <FloatingIcon icon={Cog} className="w-10 h-10 top-[60%] right-[5%] animate-spin" delay="0s" />
-      <FloatingIcon icon={Sparkles} className="w-8 h-8 top-[5%] left-[50%]" delay="0.8s" />
+      {/* Engineering & Electronics Floating Icons - Left Side */}
+      <FloatingIcon icon={Cpu} className="w-16 h-16 top-[8%] left-[8%]" delay="0s" />
+      <FloatingIcon icon={Microchip} className="w-12 h-12 top-[25%] left-[3%]" delay="0.3s" />
+      <FloatingIcon icon={CircuitBoard} className="w-20 h-20 top-[45%] left-[5%]" delay="0.6s" />
+      <FloatingIcon icon={Binary} className="w-10 h-10 top-[65%] left-[8%]" delay="0.9s" />
+      <FloatingIcon icon={Database} className="w-14 h-14 bottom-[20%] left-[3%]" delay="1.2s" />
+      <FloatingIcon icon={Terminal} className="w-12 h-12 bottom-[8%] left-[12%]" delay="1.5s" />
+      
+      {/* Engineering & Electronics Floating Icons - Right Side */}
+      <FloatingIcon icon={Server} className="w-18 h-18 top-[10%] right-[5%]" delay="0.2s" />
+      <FloatingIcon icon={Wifi} className="w-14 h-14 top-[28%] right-[8%]" delay="0.5s" />
+      <FloatingIcon icon={Monitor} className="w-16 h-16 top-[48%] right-[3%]" delay="0.8s" />
+      <FloatingIcon icon={HardDrive} className="w-12 h-12 top-[68%] right-[6%]" delay="1.1s" />
+      <FloatingIcon icon={Laptop} className="w-14 h-14 bottom-[18%] right-[10%]" delay="1.4s" />
+      <FloatingIcon icon={Code} className="w-10 h-10 bottom-[5%] right-[3%]" delay="1.7s" />
+      
+      {/* Top Area Icons */}
+      <FloatingIcon icon={GraduationCap} className="w-20 h-20 top-[3%] left-[30%]" delay="0.1s" />
+      <FloatingIcon icon={Sparkles} className="w-8 h-8 top-[5%] left-[45%]" delay="0.4s" />
+      <FloatingIcon icon={BookOpen} className="w-16 h-16 top-[2%] right-[25%]" delay="0.7s" />
+      
+      {/* Bottom Area Icons */}
+      <FloatingIcon icon={Zap} className="w-12 h-12 bottom-[12%] left-[25%]" delay="1s" />
+      <FloatingIcon icon={Lightbulb} className="w-14 h-14 bottom-[5%] left-[40%]" delay="1.3s" />
+      <FloatingIcon icon={Power} className="w-10 h-10 bottom-[8%] right-[35%]" delay="1.6s" />
+      <FloatingIcon icon={Battery} className="w-12 h-12 bottom-[3%] right-[20%]" delay="1.9s" />
+      
+      {/* Rotating Cogs */}
+      <div className="absolute w-24 h-24 top-[35%] left-[2%] opacity-5">
+        <Cog className="w-full h-full text-primary animate-spin" style={{ animationDuration: "20s" }} />
+      </div>
+      <div className="absolute w-16 h-16 bottom-[30%] right-[2%] opacity-5">
+        <Settings className="w-full h-full text-primary animate-spin" style={{ animationDuration: "15s", animationDirection: "reverse" }} />
+      </div>
+      
+      {/* Additional Electronic Components */}
+      <FloatingIcon icon={Radio} className="w-10 h-10 top-[55%] left-[12%]" delay="2s" />
+      <FloatingIcon icon={Smartphone} className="w-12 h-12 top-[75%] right-[12%]" delay="2.2s" />
+      <FloatingIcon icon={Cable} className="w-10 h-10 top-[18%] left-[18%]" delay="2.4s" />
+      <FloatingIcon icon={Gauge} className="w-14 h-14 bottom-[25%] right-[18%]" delay="2.6s" />
+      <FloatingIcon icon={Wrench} className="w-10 h-10 top-[38%] right-[12%]" delay="2.8s" />
       
       {/* Circuit Lines - Decorative */}
       <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">
