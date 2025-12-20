@@ -69,8 +69,8 @@ export default function AboutUs() {
 
             <div className="space-y-3 text-sm">
               <p className="text-foreground leading-relaxed">
-                
-              <br />
+Nr. Gujarat High Court, S.G.Highway,
+Ahedabad-380060, Gujarat, India.<br />
                 Nr. Gujarat High Court, S.G.Highway,<br />
                 Ahmedabad-380060, Gujarat, India.
               </p>
@@ -118,7 +118,7 @@ export default function AboutUs() {
               </li>
               <li className="flex gap-2">
                 <span className="text-primary">•</span>
-                <span>Password : Get it from School Side.</span>
+                <span>Password : Get it from College Side.</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-primary">•</span>
