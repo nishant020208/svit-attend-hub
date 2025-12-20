@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 export default function LeaveManagement() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, loading: roleLoading, userId } = useUserRole();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,15 @@ export default function LeaveManagement() {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (!roleLoading && role === "STUDENT" && userId) {
+      fetchStudentId(userId);
+    }
+    if (!roleLoading && role) {
+      fetchLeaveRequests();
+    }
+  }, [role, roleLoading, userId]);
 
   const checkAuth = async () => {
     try {
@@ -52,26 +63,6 @@ export default function LeaveManagement() {
         .maybeSingle();
 
       setProfile(profileData);
-
-      if (profileData?.role === "STUDENT") {
-        const { data: studentData } = await supabase
-          .from("students")
-          .select("id")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-        
-        if (studentData) {
-          setStudentId(studentData.id);
-        } else {
-          toast({
-            title: "Student Record Not Found",
-            description: "Please contact administrator to set up your student record.",
-            variant: "destructive",
-          });
-        }
-      }
-
-      await fetchLeaveRequests(profileData?.role);
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/auth");
@@ -80,7 +71,25 @@ export default function LeaveManagement() {
     }
   };
 
-  const fetchLeaveRequests = async (role: string) => {
+  const fetchStudentId = async (userIdParam: string) => {
+    const { data: studentData } = await supabase
+      .from("students")
+      .select("id")
+      .eq("user_id", userIdParam)
+      .maybeSingle();
+    
+    if (studentData) {
+      setStudentId(studentData.id);
+    } else {
+      toast({
+        title: "Student Record Not Found",
+        description: "Please contact administrator to set up your student record.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchLeaveRequests = async () => {
     try {
       let query = supabase
         .from("leave_requests")
@@ -143,7 +152,7 @@ export default function LeaveManagement() {
 
       setNewLeave({ subject: "", reason: "", startDate: "", endDate: "" });
       setDialogOpen(false);
-      await fetchLeaveRequests(profile?.role);
+      await fetchLeaveRequests();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -171,7 +180,7 @@ export default function LeaveManagement() {
         description: `Leave request ${status.toLowerCase()}`,
       });
 
-      fetchLeaveRequests(profile?.role);
+      fetchLeaveRequests();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -198,13 +207,13 @@ export default function LeaveManagement() {
     );
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
+      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-4 md:p-6">
         <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
@@ -213,7 +222,7 @@ export default function LeaveManagement() {
             </h1>
             <p className="text-muted-foreground">Submit and track leave requests</p>
           </div>
-          {profile?.role === "STUDENT" && studentId && (
+          {role === "STUDENT" && studentId && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gradient-primary hover-scale transition-smooth">
@@ -283,7 +292,7 @@ export default function LeaveManagement() {
                   <div className="flex-1">
                     <CardTitle className="text-lg">{request.subject}</CardTitle>
                     <CardDescription className="mt-1">
-                      {profile?.role !== "STUDENT" && (
+                      {role !== "STUDENT" && (
                         <>
                           Student: {request.students?.profiles?.name} ({request.students?.roll_number})
                           <br />
@@ -314,7 +323,7 @@ export default function LeaveManagement() {
                     </div>
                   )}
 
-                  {(profile?.role === "FACULTY" || profile?.role === "ADMIN") && request.status === "PENDING" && (
+                  {(role === "FACULTY" || role === "ADMIN") && request.status === "PENDING" && (
                     <div className="flex flex-wrap gap-2 pt-3 border-t">
                       <Button
                         size="sm"

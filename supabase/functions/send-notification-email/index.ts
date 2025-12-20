@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -22,7 +23,93 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('No authorization header provided');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - No authorization header' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication failed:', authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token' }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Check if user has ADMIN or FACULTY role
+    const { data: roleData, error: roleError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (roleError || !roleData) {
+      console.error('Role check failed:', roleError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Unable to verify role' }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!['ADMIN', 'FACULTY'].includes(roleData.role)) {
+      console.error('Insufficient permissions for role:', roleData.role);
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Only ADMIN and FACULTY can send notifications' }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const { to, subject, message, priority, actionUrl }: NotificationEmailRequest = await req.json();
+
+    // Validate required fields
+    if (!to || !subject || !message) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: to, subject, message' }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Validate email recipients
+    const recipients = Array.isArray(to) ? to : [to];
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of recipients) {
+      if (!emailRegex.test(email)) {
+        return new Response(
+          JSON.stringify({ error: `Invalid email address: ${email}` }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    }
+
+    // Validate subject and message length
+    if (subject.length > 200) {
+      return new Response(
+        JSON.stringify({ error: 'Subject must be less than 200 characters' }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (message.length > 10000) {
+      return new Response(
+        JSON.stringify({ error: 'Message must be less than 10000 characters' }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log('Sending notification email from user:', user.id, 'with role:', roleData.role);
 
     const priorityBadge = priority === 'urgent' ? '🚨 URGENT' : 
                           priority === 'high' ? '⚠️ HIGH PRIORITY' : '';
@@ -52,11 +139,11 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div class="content">
               ${priorityBadge ? `<div class="priority-badge ${priority}">${priorityBadge}</div>` : ''}
-              <h2>${subject}</h2>
+              <h2>${subject.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</h2>
               <div class="message">
-                ${message.replace(/\n/g, '<br>')}
+                ${message.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}
               </div>
-              ${actionUrl ? `<a href="${actionUrl}" class="action-button">View Details</a>` : ''}
+              ${actionUrl ? `<a href="${encodeURI(actionUrl)}" class="action-button">View Details</a>` : ''}
               <div class="footer">
                 <p>This is an automated notification from SVIT Attend Hub</p>
                 <p>If you have any questions, please contact your administrator</p>
@@ -66,8 +153,6 @@ const handler = async (req: Request): Promise<Response> => {
         </body>
       </html>
     `;
-
-    const recipients = Array.isArray(to) ? to : [to];
     
     const emailResponse = await resend.emails.send({
       from: "SVIT Attend Hub <onboarding@resend.dev>",

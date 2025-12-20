@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 export default function Attendance() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, loading: roleLoading, userId } = useUserRole();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -31,6 +33,12 @@ export default function Attendance() {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (!roleLoading && role === "STUDENT" && userId) {
+      fetchStudentAttendance(userId);
+    }
+  }, [role, roleLoading, userId]);
 
   const checkAuth = async () => {
     try {
@@ -51,10 +59,6 @@ export default function Attendance() {
 
       if (profileError) throw profileError;
       setProfile(profileData);
-
-      if (profileData.role === "STUDENT") {
-        fetchStudentAttendance(session.user.id);
-      }
     } catch (error: any) {
       console.error("Auth error:", error);
       navigate("/auth");
@@ -63,12 +67,12 @@ export default function Attendance() {
     }
   };
 
-  const fetchStudentAttendance = async (userId: string) => {
+  const fetchStudentAttendance = async (userIdParam: string) => {
     try {
       const { data: studentData } = await supabase
         .from("students")
         .select("id")
-        .eq("user_id", userId)
+        .eq("user_id", userIdParam)
         .maybeSingle();
 
       if (studentData) {
@@ -150,10 +154,10 @@ export default function Attendance() {
   };
 
   useEffect(() => {
-    if (profile?.role === "FACULTY" || profile?.role === "ADMIN") {
+    if (!roleLoading && (role === "FACULTY" || role === "ADMIN")) {
       fetchStudents();
     }
-  }, [selectedCourse, selectedYear, selectedSection, selectedDate, selectedSubject, profile]);
+  }, [selectedCourse, selectedYear, selectedSection, selectedDate, selectedSubject, role, roleLoading]);
 
   const handleAttendanceChange = (studentId: string, status: string) => {
     setAttendanceData((prev: any) => ({
@@ -200,20 +204,20 @@ export default function Attendance() {
     }
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
+      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Attendance Management</h1>
           <p className="text-muted-foreground">Mark and track student attendance</p>
         </div>
 
-        {(profile?.role === "FACULTY" || profile?.role === "ADMIN") && (
+        {(role === "FACULTY" || role === "ADMIN") && (
           <>
             <Card className="mb-6 glass-effect">
               <CardHeader>
@@ -364,7 +368,7 @@ export default function Attendance() {
           </>
         )}
 
-        {profile?.role === "STUDENT" && students.length > 0 && (
+        {role === "STUDENT" && students.length > 0 && (
           <div className="space-y-6">
             <Card className="glass-effect">
               <CardHeader>
