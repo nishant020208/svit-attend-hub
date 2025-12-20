@@ -68,8 +68,7 @@ export default function AboutUs() {
             </div>
 
             <div className="space-y-3 text-sm">
-              <p className="text-foreground leading-relaxed">
-                Nr. Gujarat High Court, S.G.Highway,<br />
+              <p className="text-foreground leading-relaxed">​<br />
                 Ahmedabad-380060, Gujarat, India.
               </p>
 
