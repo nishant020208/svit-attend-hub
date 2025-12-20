@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,10 +16,12 @@ import { Html5Qrcode } from "html5-qrcode";
 import { CalendarIcon, QrCode, Scan } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function AttendanceQR() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, loading: roleLoading, userId } = useUserRole();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +49,12 @@ export default function AttendanceQR() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!roleLoading && role === "STUDENT" && userId) {
+      fetchStudentData(userId);
+    }
+  }, [role, roleLoading, userId]);
+
   const checkAuth = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -64,23 +73,23 @@ export default function AttendanceQR() {
         .single();
 
       setProfile(profileData);
-
-      if (profileData?.role === "STUDENT") {
-        const { data: studentData } = await supabase
-          .from("students")
-          .select("id, course, year, section")
-          .eq("user_id", session.user.id)
-          .single();
-        
-        if (studentData) {
-          setStudentId(studentData.id);
-        }
-      }
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/auth");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStudentData = async (userIdParam: string) => {
+    const { data: studentData } = await supabase
+      .from("students")
+      .select("id, course, year, section")
+      .eq("user_id", userIdParam)
+      .single();
+    
+    if (studentData) {
+      setStudentId(studentData.id);
     }
   };
 
@@ -191,13 +200,13 @@ export default function AttendanceQR() {
     }
   };
 
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  if (loading || roleLoading) {
+    return <LoadingSpinner />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
+      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-4 md:p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
@@ -206,7 +215,7 @@ export default function AttendanceQR() {
           <p className="text-muted-foreground">Scan or generate QR codes for attendance</p>
         </div>
 
-        {profile?.role === "FACULTY" || profile?.role === "ADMIN" ? (
+        {role === "FACULTY" || role === "ADMIN" ? (
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

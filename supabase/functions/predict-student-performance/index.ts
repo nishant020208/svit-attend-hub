@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -14,6 +15,55 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('No authorization header provided');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Verify the user is authenticated
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error('Authentication failed:', authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has ADMIN or FACULTY role
+    const { data: roleData, error: roleError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (roleError || !roleData) {
+      console.error('Role check failed:', roleError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Unable to verify role' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!['ADMIN', 'FACULTY'].includes(roleData.role)) {
+      console.error('Insufficient permissions for role:', roleData.role);
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Only ADMIN and FACULTY can access this function' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { studentData, attendanceData } = await req.json();
 
     if (!LOVABLE_API_KEY) {
@@ -48,6 +98,8 @@ Analyze this student's performance and provide:
 
 Format as JSON with keys: riskLevel, issues, recommendations, mentorFeedback, prediction
 `;
+
+    console.log('Making AI prediction request for user:', user.id, 'with role:', roleData.role);
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -105,6 +157,8 @@ Format as JSON with keys: riskLevel, issues, recommendations, mentorFeedback, pr
         prediction: 'Needs improvement'
       };
     }
+
+    console.log('AI prediction completed successfully');
 
     return new Response(
       JSON.stringify({

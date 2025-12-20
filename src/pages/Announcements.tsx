@@ -12,11 +12,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Calendar, User, Paperclip, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function Announcements() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { role, userId } = useUserRole();
+  const { role, loading: roleLoading, userId } = useUserRole();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -73,6 +74,40 @@ export default function Announcements() {
     }
   };
 
+  const getSignedUrl = async (filePath: string): Promise<string | null> => {
+    try {
+      const fileName = filePath.split('/').pop();
+      if (!fileName) return null;
+      
+      const { data, error } = await supabase.storage
+        .from('announcements')
+        .createSignedUrl(fileName, 3600); // 1 hour expiry
+      
+      if (error) {
+        console.error('Error creating signed URL:', error);
+        return null;
+      }
+      
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Error getting signed URL:', error);
+      return null;
+    }
+  };
+
+  const handleDownloadAttachment = async (attachmentUrl: string) => {
+    const signedUrl = await getSignedUrl(attachmentUrl);
+    if (signedUrl) {
+      window.open(signedUrl, '_blank');
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to download attachment",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCreateAnnouncement = async () => {
     setValidationErrors({});
 
@@ -124,11 +159,8 @@ export default function Announcements() {
 
         if (uploadError) throw uploadError;
         
-        const { data: { publicUrl } } = supabase.storage
-          .from('announcements')
-          .getPublicUrl(fileName);
-        
-        attachmentUrl = publicUrl;
+        // Store just the file path, not the public URL
+        attachmentUrl = fileName;
       }
 
       const { error } = await supabase
@@ -163,8 +195,8 @@ export default function Announcements() {
     }
   };
 
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  if (loading || roleLoading) {
+    return <LoadingSpinner />;
   }
 
   return (
@@ -198,6 +230,9 @@ export default function Announcements() {
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                     />
+                    {validationErrors.title && (
+                      <p className="text-sm text-destructive mt-1">{validationErrors.title}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="content">Content</Label>
@@ -208,14 +243,17 @@ export default function Announcements() {
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
                     />
+                    {validationErrors.content && (
+                      <p className="text-sm text-destructive mt-1">{validationErrors.content}</p>
+                    )}
                   </div>
                   <div>
-                    <Label htmlFor="file">Attachment (PDF/CSV)</Label>
+                    <Label htmlFor="file">Attachment (PDF/CSV/Image)</Label>
                     <div className="flex items-center gap-2">
                       <Input
                         id="file"
                         type="file"
-                        accept=".pdf,.csv"
+                        accept=".pdf,.csv,.jpg,.jpeg,.png"
                         onChange={(e) => setUploadedFile(e.target.files?.[0] || null)}
                       />
                       {uploadedFile && (
@@ -252,11 +290,13 @@ export default function Announcements() {
                 <p className="text-foreground whitespace-pre-wrap">{announcement.content}</p>
                 {announcement.attachment_url && (
                   <div className="mt-4">
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={announcement.attachment_url} download target="_blank" rel="noopener noreferrer">
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Attachment
-                      </a>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleDownloadAttachment(announcement.attachment_url)}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Attachment
                     </Button>
                   </div>
                 )}
