@@ -7,6 +7,7 @@ import { Calendar, Clock, FileText, TrendingUp, AlertCircle } from "lucide-react
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -137,6 +138,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <FloatingGeometry variant="default" />
       <TopTabs
         userEmail={user?.email}
         userName={profile?.name}

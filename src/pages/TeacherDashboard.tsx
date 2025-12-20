@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users, ClipboardCheck, FileText, Calendar, Clock, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -133,6 +134,7 @@ export default function TeacherDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
+      <FloatingGeometry variant="minimal" />
       <TopTabs
         userEmail={user?.email}
         userName={profile?.name}

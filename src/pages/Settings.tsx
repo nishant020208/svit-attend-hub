@@ -17,6 +17,7 @@ import AIHelpAssistant from "@/components/settings/AIHelpAssistant";
 import Papa from "papaparse";
 import { z } from "zod";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 // CSV Whitelist Entry Validation
 const csvWhitelistSchema = z.object({
@@ -462,6 +463,7 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <FloatingGeometry variant="minimal" />
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-4 md:p-6 max-w-5xl">
         {/* ERP Header */}

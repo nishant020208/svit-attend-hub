@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function LeaveManagement() {
   const navigate = useNavigate();
@@ -213,6 +214,7 @@ export default function LeaveManagement() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <FloatingGeometry variant="colorful" />
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-4 md:p-6">
         <div className="mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

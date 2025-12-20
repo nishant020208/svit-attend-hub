@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
@@ -193,6 +194,7 @@ export default function ParentDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-purple-50/30 dark:to-purple-950/10">
+      <FloatingGeometry variant="colorful" />
       <TopTabs
         userEmail={user?.email}
         userName={profile?.name}
