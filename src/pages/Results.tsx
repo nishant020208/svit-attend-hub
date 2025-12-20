@@ -17,6 +17,7 @@ import {
   Trophy, Calculator, Search, Filter, Printer
 } from "lucide-react";
 import Papa from "papaparse";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 interface GradeConfig {
   id: string;
@@ -504,6 +505,7 @@ export default function Results() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <FloatingGeometry variant="colorful" />
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role} />
       
       <main className="container mx-auto p-4 md:p-6 max-w-7xl">

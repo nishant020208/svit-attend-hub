@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Calendar, GraduationCap, BookOpen, Phone, Mail, Globe } from "lucide-react";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
+
 export default function AboutUs() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
@@ -39,6 +41,7 @@ export default function AboutUs() {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
   return <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <FloatingGeometry variant="minimal" />
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
       <main className="container mx-auto p-4 md:p-6 max-w-3xl">
         {/* Header */}

@@ -12,6 +12,7 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { Download, TrendingDown, TrendingUp, AlertTriangle, Brain, Users, Calendar, Target } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -313,6 +314,7 @@ export default function Reports() {
 
   return (
     <div className="min-h-screen bg-background">
+      <FloatingGeometry variant="dark" />
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role} />
       <main className="container mx-auto p-6 space-y-6">
         <div className="flex justify-between items-center">

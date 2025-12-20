@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Calendar, User, Paperclip, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function Announcements() {
   const navigate = useNavigate();
@@ -201,6 +202,7 @@ export default function Announcements() {
 
   return (
     <div className="min-h-screen bg-background">
+      <FloatingGeometry variant="default" />
       <TopTabs userEmail={user?.email} userName={user?.user_metadata?.name} userRole={role || undefined} />
       <main className="container mx-auto p-6">
         <div className="mb-6 flex items-center justify-between">
