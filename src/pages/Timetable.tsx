@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function Timetable() {
   const navigate = useNavigate();
+  const { role, loading: roleLoading, userId } = useUserRole();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -41,6 +43,12 @@ export default function Timetable() {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (!roleLoading && role && userId) {
+      fetchDataByRole();
+    }
+  }, [role, roleLoading, userId]);
 
   const checkAuth = async () => {
     try {
@@ -67,25 +75,26 @@ export default function Timetable() {
         fetchCourses(),
         fetchSections()
       ]);
-
-      // If student, get their course/section/year
-      if (profileData?.role === "STUDENT") {
-        const { data: studentData } = await supabase
-          .from("students")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .single();
-        
-        setStudentData(studentData);
-        await fetchTimetable(profileData, session.user.id, studentData);
-      } else {
-        await fetchTimetable(profileData, session.user.id);
-      }
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/auth");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDataByRole = async () => {
+    if (role === "STUDENT" && userId) {
+      const { data: studentDataResult } = await supabase
+        .from("students")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+      
+      setStudentData(studentDataResult);
+      await fetchTimetable(studentDataResult);
+    } else {
+      await fetchTimetable();
     }
   };
 
@@ -128,16 +137,16 @@ export default function Timetable() {
     }
   };
 
-  const fetchTimetable = async (profileData: any, userId: string, studentData?: any) => {
+  const fetchTimetable = async (studentDataParam?: any) => {
     try {
       let query = supabase.from("timetable").select("*");
 
       // Students see only their timetable
-      if (profileData?.role === "STUDENT" && studentData) {
+      if (role === "STUDENT" && studentDataParam) {
         query = query
-          .eq("course", studentData.course)
-          .eq("section", studentData.section)
-          .eq("year", studentData.year);
+          .eq("course", studentDataParam.course)
+          .eq("section", studentDataParam.section)
+          .eq("year", studentDataParam.year);
       }
 
       const { data, error } = await query.order("day_of_week").order("start_time");
@@ -165,7 +174,7 @@ export default function Timetable() {
         course: newEntry.course,
         section: newEntry.section,
         year: parseInt(newEntry.year),
-        faculty_id: user.id,
+        faculty_id: userId,
       });
 
       if (error) throw error;
@@ -182,7 +191,7 @@ export default function Timetable() {
         year: "",
       });
       setDialogOpen(false);
-      fetchTimetable(profile, user.id, studentData);
+      fetchTimetable(studentData);
     } catch (error: any) {
       console.error("Error creating timetable entry:", error);
       toast.error(error.message || "Failed to create timetable entry");
@@ -201,7 +210,7 @@ export default function Timetable() {
       if (error) throw error;
 
       toast.success("Entry deleted successfully");
-      fetchTimetable(profile, user.id, studentData);
+      fetchTimetable(studentData);
     } catch (error: any) {
       toast.error(error.message || "Failed to delete entry");
     }
@@ -228,7 +237,7 @@ export default function Timetable() {
             course: row.course,
             section: row.section,
             year: parseInt(row.year),
-            faculty_id: user.id,
+            faculty_id: userId,
           }));
 
         if (entries.length === 0) {
@@ -243,7 +252,7 @@ export default function Timetable() {
 
           toast.success(`Successfully uploaded ${entries.length} entries`);
           setCsvFile(null);
-          fetchTimetable(profile, user.id, studentData);
+          fetchTimetable(studentData);
         } catch (error: any) {
           console.error("Error uploading CSV:", error);
           toast.error(error.message || "Failed to upload CSV");
@@ -271,16 +280,16 @@ export default function Timetable() {
     return byDay;
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return <LoadingSpinner />;
   }
 
   const timetableByDay = getTimetableByDay();
-  const isStudent = profile?.role === "STUDENT";
+  const isStudent = role === "STUDENT";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
+      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-6">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -293,7 +302,7 @@ export default function Timetable() {
                 </p>
               )}
             </div>
-            {profile?.role === "ADMIN" && (
+            {role === "ADMIN" && (
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="gradient-primary">
@@ -436,7 +445,7 @@ export default function Timetable() {
           
           </div>
           
-          {profile?.role === "ADMIN" && (
+          {role === "ADMIN" && (
             <Card className="glass-effect mb-6">
               <CardHeader>
                 <CardTitle>Bulk Upload</CardTitle>
@@ -549,7 +558,7 @@ export default function Timetable() {
                           <TableHead>Course</TableHead>
                           <TableHead>Section</TableHead>
                           <TableHead>Year</TableHead>
-                          {profile?.role === "ADMIN" && <TableHead>Actions</TableHead>}
+                          {role === "ADMIN" && <TableHead>Actions</TableHead>}
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -562,7 +571,7 @@ export default function Timetable() {
                             <TableCell>{entry.course}</TableCell>
                             <TableCell>{entry.section}</TableCell>
                             <TableCell>{entry.year}</TableCell>
-                            {profile?.role === "ADMIN" && (
+                            {role === "ADMIN" && (
                               <TableCell>
                                 <Button
                                   variant="ghost"
@@ -590,7 +599,7 @@ export default function Timetable() {
                               <p className="font-bold text-lg">{entry.subject}</p>
                               <p className="text-sm text-muted-foreground">{getDayName(entry.day_of_week)}</p>
                             </div>
-                            {profile?.role === "ADMIN" && (
+                            {role === "ADMIN" && (
                               <Button
                                 variant="ghost"
                                 size="sm"

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { MotivationCard } from "@/components/settings/MotivationCard";
 import AIHelpAssistant from "@/components/settings/AIHelpAssistant";
 import Papa from "papaparse";
 import { z } from "zod";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // CSV Whitelist Entry Validation
 const csvWhitelistSchema = z.object({
@@ -28,6 +30,7 @@ type CSVWhitelistEntry = z.infer<typeof csvWhitelistSchema>;
 export default function Settings() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, loading: roleLoading, userId } = useUserRole();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -57,6 +60,16 @@ export default function Settings() {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (!roleLoading && role === "ADMIN") {
+      fetchWhitelist();
+      fetchRegisteredUsers();
+    }
+    if (!roleLoading && role === "PARENT" && userId) {
+      fetchLinkedStudents();
+    }
+  }, [role, roleLoading, userId]);
 
   const checkAuth = async () => {
     try {
@@ -89,15 +102,6 @@ export default function Settings() {
           gender: profileData.gender || "",
         });
       }
-
-      if (profileData?.role === "ADMIN") {
-        fetchWhitelist();
-        fetchRegisteredUsers();
-      }
-
-      if (profileData?.role === "PARENT") {
-        fetchLinkedStudents();
-      }
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/auth");
@@ -121,7 +125,7 @@ export default function Settings() {
             profiles:user_id (name, email)
           )
         `)
-        .eq("parent_id", user.id);
+        .eq("parent_id", userId);
 
       if (error) throw error;
       setLinkedStudents(data || []);
@@ -146,7 +150,6 @@ export default function Settings() {
         .from("profiles")
         .select("id")
         .eq("email", studentEmail)
-        .eq("role", "STUDENT")
         .single();
 
       if (profileError || !profileData) {
@@ -176,7 +179,7 @@ export default function Settings() {
       const { error } = await supabase
         .from("parent_student_relation")
         .insert({
-          parent_id: user.id,
+          parent_id: userId,
           student_id: studentData.id,
           relation_type: "PARENT",
         });
@@ -253,7 +256,7 @@ export default function Settings() {
           email: newEmail,
           name: newName,
           role: newRole as "ADMIN" | "FACULTY" | "STUDENT",
-          added_by: user.id,
+          added_by: userId,
         }]);
 
       if (error) throw error;
@@ -356,7 +359,7 @@ export default function Settings() {
               email: r.email,
               name: r.name,
               role: r.role,
-              added_by: user.id,
+              added_by: userId,
             })));
 
           if (error) throw error;
@@ -398,7 +401,7 @@ export default function Settings() {
           date_of_birth: profileSettings.dateOfBirth,
           gender: profileSettings.gender,
         })
-        .eq("id", user.id);
+        .eq("id", userId);
 
       if (error) throw error;
 
@@ -415,8 +418,8 @@ export default function Settings() {
     }
   };
 
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  if (loading || roleLoading) {
+    return <LoadingSpinner />;
   }
 
   const handleContactUs = () => {
@@ -459,7 +462,7 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={profile?.role} />
+      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-4 md:p-6 max-w-5xl">
         {/* ERP Header */}
         <div className="mb-6 flex justify-between items-center">
@@ -499,13 +502,13 @@ export default function Settings() {
               <Sparkles className="h-4 w-4" />
               <span className="hidden sm:inline">Motivation</span>
             </TabsTrigger>
-            {(profile?.role === "ADMIN" || profile?.role === "PARENT") && (
+            {(role === "ADMIN" || role === "PARENT") && (
               <TabsTrigger 
-                value={profile?.role === "ADMIN" ? "admin" : "parent"} 
+                value={role === "ADMIN" ? "admin" : "parent"} 
                 className="flex items-center gap-2 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground"
               >
-                {profile?.role === "ADMIN" ? <Shield className="h-4 w-4" /> : <Users className="h-4 w-4" />}
-                <span className="hidden sm:inline">{profile?.role === "ADMIN" ? "Admin" : "Students"}</span>
+                {role === "ADMIN" ? <Shield className="h-4 w-4" /> : <Users className="h-4 w-4" />}
+                <span className="hidden sm:inline">{role === "ADMIN" ? "Admin" : "Students"}</span>
               </TabsTrigger>
             )}
           </TabsList>
@@ -664,7 +667,7 @@ export default function Settings() {
           </TabsContent>
 
           {/* Admin Tab */}
-          {profile?.role === "ADMIN" && (
+          {role === "ADMIN" && (
             <TabsContent value="admin" className="space-y-6">
               <Card className="shadow-lg">
                 <CardHeader className="gradient-secondary text-primary-foreground">
@@ -802,7 +805,7 @@ export default function Settings() {
           )}
 
           {/* Parent Tab */}
-          {profile?.role === "PARENT" && (
+          {role === "PARENT" && (
             <TabsContent value="parent" className="space-y-6">
               <Card className="shadow-lg">
                 <CardHeader className="gradient-accent text-primary-foreground">
