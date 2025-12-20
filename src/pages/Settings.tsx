@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, Upload, Settings as SettingsIcon, Sparkles, User, Shield, Users } from "lucide-react";
+import { Trash2, Plus, Upload, Settings as SettingsIcon, Sparkles, User, Shield, Users, Bot } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MotivationCard } from "@/components/settings/MotivationCard";
+import AIHelpAssistant from "@/components/settings/AIHelpAssistant";
 import Papa from "papaparse";
 import { z } from "zod";
 
@@ -481,7 +482,7 @@ export default function Settings() {
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto p-1 bg-secondary/50">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 h-auto p-1 bg-secondary/50">
             <TabsTrigger value="general" className="flex items-center gap-2 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
               <SettingsIcon className="h-4 w-4" />
               <span className="hidden sm:inline">General</span>
@@ -489,6 +490,10 @@ export default function Settings() {
             <TabsTrigger value="profile" className="flex items-center gap-2 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Profile</span>
+            </TabsTrigger>
+            <TabsTrigger value="ai-help" className="flex items-center gap-2 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
+              <Bot className="h-4 w-4" />
+              <span className="hidden sm:inline">AI Help</span>
             </TabsTrigger>
             <TabsTrigger value="motivation" className="flex items-center gap-2 data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
               <Sparkles className="h-4 w-4" />
@@ -646,6 +651,11 @@ export default function Settings() {
                 </Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* AI Help Tab */}
+          <TabsContent value="ai-help" className="space-y-6">
+            <AIHelpAssistant />
           </TabsContent>
 
           {/* Motivation Tab */}
