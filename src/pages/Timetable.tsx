@@ -15,6 +15,7 @@ import { Plus, Trash2, Upload, Clock, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function Timetable() {
   const navigate = useNavigate();
@@ -289,6 +290,7 @@ export default function Timetable() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      <FloatingGeometry variant="default" />
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-6">
         <div className="mb-6">

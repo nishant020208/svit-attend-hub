@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity, BookOpen, Calendar, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -167,6 +168,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-background to-slate-100 dark:from-slate-950 dark:via-background dark:to-slate-900">
+      <FloatingGeometry variant="dark" />
       <TopTabs
         userEmail={user?.email}
         userName={profile?.name}
