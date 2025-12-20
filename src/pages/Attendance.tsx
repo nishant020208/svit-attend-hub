@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Clock, Save, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Progress } from "@/components/ui/progress";
+import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function Attendance() {
   const navigate = useNavigate();
@@ -210,6 +211,7 @@ export default function Attendance() {
 
   return (
     <div className="min-h-screen bg-background">
+      <FloatingGeometry variant="default" />
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-6">
         <div className="mb-6">
