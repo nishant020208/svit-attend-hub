@@ -445,10 +445,13 @@ export function RoleBasedAuthForm() {
           
           {/* Developer Mode Button */}
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={() => setShowDevDialog(true)}
-            className="text-xs text-muted-foreground/50 hover:text-primary hover:bg-primary/10 transition-all duration-300 rounded-lg gap-2"
+            onClick={() => {
+              console.log("Developer Mode button clicked");
+              setShowDevDialog(true);
+            }}
+            className="text-xs border-primary/30 text-primary hover:text-primary-foreground hover:bg-primary transition-all duration-300 rounded-lg gap-2"
           >
             <Code className="h-3 w-3" />
             Developer Mode
