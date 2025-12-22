@@ -1,4 +1,4 @@
-import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList } from "lucide-react";
+import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Code } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { isDevMode, clearDevMode } from "@/hooks/useUserRole";
 
 interface AppMenuProps {
   userRole?: string;
@@ -19,8 +20,20 @@ interface AppMenuProps {
 export function AppMenu({ userRole }: AppMenuProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isDeveloper = isDevMode();
 
   const handleSignOut = async () => {
+    // Check if in developer mode
+    if (isDeveloper) {
+      clearDevMode();
+      toast({
+        title: "Developer Mode Deactivated",
+        description: "You have exited developer mode.",
+      });
+      navigate("/auth");
+      return;
+    }
+
     await supabase.auth.signOut();
     toast({
       title: "Signed out",

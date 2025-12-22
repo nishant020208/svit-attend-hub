@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut, GraduationCap, Bell, Users, BookOpen, Layers } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut, GraduationCap, Bell, Users, BookOpen, Layers, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import svitLogo from "@/assets/svit-logo-official.jpg";
+import { isDevMode, clearDevMode } from "@/hooks/useUserRole";
+import { Badge } from "@/components/ui/badge";
+
 interface TopTabsProps {
   userEmail?: string;
   userName?: string;
@@ -88,6 +91,17 @@ export function TopTabs({
     toast
   } = useToast();
   const handleLogout = async () => {
+    // Check if in developer mode
+    if (isDevMode()) {
+      clearDevMode();
+      toast({
+        title: "Developer Mode Deactivated",
+        description: "You have exited developer mode.",
+      });
+      navigate("/auth");
+      return;
+    }
+
     const {
       error
     } = await supabase.auth.signOut();
@@ -101,6 +115,8 @@ export function TopTabs({
       navigate("/auth");
     }
   };
+
+  const isDeveloper = isDevMode();
   const initials = userName?.split(" ").map(n => n[0]).join("").toUpperCase() || "U";
   return <header className="sticky top-0 z-50 w-full border-b shadow-lg bg-gradient-primary">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 bg-blue-700">
