@@ -362,3 +362,10 @@ button[class*="lovable"],
 .animate-pulse-rectangle {
   animation: pulse-rectangle 1.2s ease-in-out infinite;
 }
+
+/* Mobile bottom nav spacing */
+@media (max-width: 639px) {
+  main, .main-content {
+    padding-bottom: 5rem !important;
+  }
+}
