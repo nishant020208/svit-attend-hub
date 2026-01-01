@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserRole, isDevMode } from "@/hooks/useUserRole";
+import { useUserRole } from "@/hooks/useUserRole";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,12 +74,6 @@ export default function Settings() {
 
   const checkAuth = async () => {
     try {
-      // Developer mode bypasses auth check
-      if (isDevMode()) {
-        setLoading(false);
-        return;
-      }
-
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
