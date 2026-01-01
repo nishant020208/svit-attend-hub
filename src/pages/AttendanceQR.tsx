@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -12,11 +12,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
-import { Html5Qrcode } from "html5-qrcode";
-import { CalendarIcon, QrCode, Scan } from "lucide-react";
+import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
+import { CalendarIcon, QrCode, Scan, Camera, CameraOff, AlertCircle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+const QR_READER_ID = "qr-reader-element";
 
 export default function AttendanceQR() {
   const navigate = useNavigate();
@@ -38,14 +41,20 @@ export default function AttendanceQR() {
 
   // QR Scanning (Student)
   const [scanning, setScanning] = useState(false);
-  const [html5QrCode, setHtml5QrCode] = useState<Html5Qrcode | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [scanSuccess, setScanSuccess] = useState(false);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const scannerMountedRef = useRef(false);
 
   useEffect(() => {
     checkAuth();
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      if (html5QrCode?.isScanning) {
-        html5QrCode.stop();
-      }
+      cleanupScanner();
     };
   }, []);
 
@@ -54,6 +63,22 @@ export default function AttendanceQR() {
       fetchStudentData(userId);
     }
   }, [role, roleLoading, userId]);
+
+  const cleanupScanner = useCallback(async () => {
+    if (html5QrCodeRef.current) {
+      try {
+        const state = html5QrCodeRef.current.getState();
+        if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+          await html5QrCodeRef.current.stop();
+        }
+        html5QrCodeRef.current.clear();
+      } catch (error) {
+        console.log("Cleanup error (safe to ignore):", error);
+      }
+      html5QrCodeRef.current = null;
+    }
+    scannerMountedRef.current = false;
+  }, []);
 
   const checkAuth = async () => {
     try {
@@ -121,60 +146,165 @@ export default function AttendanceQR() {
     });
   };
 
-  const startScanning = async () => {
+  const checkCameraPermission = async (): Promise<boolean> => {
     try {
-      setScanning(true);
-      const qrCode = new Html5Qrcode("qr-reader");
-      setHtml5QrCode(qrCode);
+      // First check if we can enumerate devices
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(device => device.kind === 'videoinput');
+      
+      if (videoDevices.length === 0) {
+        setCameraError("No camera found on this device");
+        return false;
+      }
+
+      // Try to get camera permission
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "environment" } 
+      });
+      
+      // Stop the test stream immediately
+      stream.getTracks().forEach(track => track.stop());
+      
+      return true;
+    } catch (error: any) {
+      console.error("Camera permission error:", error);
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setCameraError("Camera permission denied. Please allow camera access in your browser settings.");
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        setCameraError("No camera found on this device.");
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        setCameraError("Camera is in use by another application. Please close other apps using the camera.");
+      } else if (error.name === 'OverconstrainedError') {
+        setCameraError("Camera constraints not supported. Try using a different browser.");
+      } else {
+        setCameraError(`Camera error: ${error.message || 'Unknown error'}`);
+      }
+      
+      return false;
+    }
+  };
+
+  const startScanning = async () => {
+    setCameraError(null);
+    setScanSuccess(false);
+    setScanning(true);
+    setCameraReady(false);
+
+    // Wait for the DOM element to be rendered
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const readerElement = document.getElementById(QR_READER_ID);
+    if (!readerElement) {
+      setCameraError("Scanner container not found. Please refresh and try again.");
+      setScanning(false);
+      return;
+    }
+
+    // Check camera permission first
+    const hasPermission = await checkCameraPermission();
+    if (!hasPermission) {
+      setScanning(false);
+      return;
+    }
+
+    try {
+      // Cleanup any existing instance
+      await cleanupScanner();
+
+      // Create new instance
+      html5QrCodeRef.current = new Html5Qrcode(QR_READER_ID);
+      scannerMountedRef.current = true;
 
       const config = {
         fps: 10,
         qrbox: { width: 250, height: 250 },
         aspectRatio: 1.0,
+        disableFlip: false,
       };
 
-      await qrCode.start(
+      await html5QrCodeRef.current.start(
         { facingMode: "environment" },
         config,
         async (decodedText) => {
+          console.log("QR Code scanned:", decodedText);
           try {
             const qrPayload = JSON.parse(decodedText);
+            setScanSuccess(true);
+            await stopScanning();
             await markAttendance(qrPayload);
-            await qrCode.stop();
-            setScanning(false);
           } catch (error) {
-            console.error("QR scan error:", error);
+            console.error("QR parse error:", error);
+            toast({
+              title: "Invalid QR Code",
+              description: "This doesn't appear to be a valid attendance QR code",
+              variant: "destructive",
+            });
           }
         },
-        (errorMessage) => {
-          // Ignore scan errors
+        () => {
+          // QR code scanning in progress - no action needed for failed frames
         }
       );
 
+      setCameraReady(true);
       toast({
         title: "Camera Started",
-        description: "Point your camera at the QR code",
+        description: "Point your camera at the attendance QR code",
       });
     } catch (error: any) {
-      console.error("Camera error:", error);
-      toast({
-        title: "Camera Error",
-        description: error.message || "Failed to start camera. Please check permissions.",
-        variant: "destructive",
-      });
+      console.error("Scanner start error:", error);
+      
+      let errorMessage = "Failed to start camera";
+      if (error.message?.includes("Permission")) {
+        errorMessage = "Camera permission denied. Please allow camera access.";
+      } else if (error.message?.includes("NotFound") || error.message?.includes("not found")) {
+        errorMessage = "No camera found on this device.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setCameraError(errorMessage);
       setScanning(false);
+      await cleanupScanner();
     }
   };
 
   const stopScanning = async () => {
-    if (html5QrCode?.isScanning) {
-      await html5QrCode.stop();
-      setScanning(false);
-    }
+    await cleanupScanner();
+    setScanning(false);
+    setCameraReady(false);
   };
 
   const markAttendance = async (qrPayload: any) => {
+    if (!studentId) {
+      toast({
+        title: "Error",
+        description: "Student record not found. Please contact admin.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      // Check if attendance already marked
+      const { data: existing } = await supabase
+        .from("attendance")
+        .select("id")
+        .eq("student_id", studentId)
+        .eq("subject", qrPayload.subject)
+        .eq("date", qrPayload.date)
+        .single();
+
+      if (existing) {
+        toast({
+          title: "Already Marked",
+          description: "Your attendance for this class has already been recorded",
+          variant: "default",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("attendance")
         .insert({
@@ -188,13 +318,14 @@ export default function AttendanceQR() {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Attendance marked successfully",
+        title: "Attendance Marked!",
+        description: `Your attendance for ${qrPayload.subject} has been recorded.`,
       });
     } catch (error: any) {
+      console.error("Attendance error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to mark attendance",
         variant: "destructive",
       });
     }
@@ -205,14 +336,14 @@ export default function AttendanceQR() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 pb-20 sm:pb-0">
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
       <main className="container mx-auto p-4 md:p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
             QR Attendance System
           </h1>
-          <p className="text-muted-foreground">Scan or generate QR codes for attendance</p>
+          <p className="text-muted-foreground text-sm sm:text-base">Scan or generate QR codes for attendance</p>
         </div>
 
         {role === "FACULTY" || role === "ADMIN" ? (
@@ -309,9 +440,9 @@ export default function AttendanceQR() {
               </Button>
 
               {qrData && (
-                <div className="flex flex-col items-center p-8 bg-white rounded-lg shadow-inner">
+                <div className="flex flex-col items-center p-6 sm:p-8 bg-white rounded-lg shadow-inner">
                   <QRCodeSVG value={qrData} size={256} level="H" />
-                  <p className="mt-4 text-sm text-muted-foreground">Students can scan this QR code to mark attendance</p>
+                  <p className="mt-4 text-sm text-gray-600 text-center">Students can scan this QR code to mark attendance</p>
                 </div>
               )}
             </CardContent>
@@ -323,30 +454,85 @@ export default function AttendanceQR() {
                 <Scan className="h-5 w-5" />
                 Scan QR Code
               </CardTitle>
-              <CardDescription>Scan the QR code shown by your teacher</CardDescription>
+              <CardDescription>Scan the QR code shown by your teacher to mark attendance</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Success Message */}
+              {scanSuccess && (
+                <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-700 dark:text-green-300">
+                    QR Code scanned successfully! Processing your attendance...
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Camera Error */}
+              {cameraError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{cameraError}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Camera Permission Info */}
+              {!scanning && !cameraError && (
+                <Alert>
+                  <Camera className="h-4 w-4" />
+                  <AlertDescription>
+                    Make sure to allow camera access when prompted. The camera will be used to scan the QR code.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Scanner Container - Always in DOM but hidden when not scanning */}
               <div 
-                id="qr-reader" 
-                className="w-full rounded-lg overflow-hidden border-2 border-border bg-black"
-                style={{ minHeight: scanning ? "400px" : "0", display: scanning ? "block" : "none" }}
+                id={QR_READER_ID}
+                className={cn(
+                  "w-full rounded-lg overflow-hidden border-2 border-border bg-black transition-all",
+                  scanning ? "min-h-[300px] sm:min-h-[400px]" : "h-0 border-0"
+                )}
               />
+
+              {/* Camera Status */}
+              {scanning && !cameraReady && !cameraError && (
+                <div className="flex items-center justify-center gap-2 py-4">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                  <span className="text-sm text-muted-foreground">Starting camera...</span>
+                </div>
+              )}
               
+              {scanning && cameraReady && (
+                <p className="text-sm text-center text-muted-foreground animate-pulse">
+                  📷 Camera is active. Point at the QR code to scan.
+                </p>
+              )}
+
+              {/* Action Buttons */}
               {!scanning ? (
-                <Button onClick={startScanning} className="w-full gradient-primary hover-scale transition-smooth">
-                  <Scan className="mr-2 h-4 w-4" />
-                  Start Camera to Scan
+                <Button 
+                  onClick={startScanning} 
+                  className="w-full gradient-primary hover-scale transition-smooth"
+                  disabled={!studentId}
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  {studentId ? "Start Camera to Scan" : "Loading student data..."}
                 </Button>
               ) : (
-                <>
-                  <p className="text-sm text-center text-muted-foreground animate-pulse">
-                    Camera is active. Point at QR code to scan.
-                  </p>
-                  <Button onClick={stopScanning} variant="destructive" className="w-full hover-scale transition-smooth">
-                    Stop Scanning
-                  </Button>
-                </>
+                <Button 
+                  onClick={stopScanning} 
+                  variant="destructive" 
+                  className="w-full hover-scale transition-smooth"
+                >
+                  <CameraOff className="mr-2 h-4 w-4" />
+                  Stop Camera
+                </Button>
               )}
+
+              {/* Help Text */}
+              <p className="text-xs text-center text-muted-foreground">
+                Tip: Make sure you're in a well-lit area and hold your camera steady
+              </p>
             </CardContent>
           </Card>
         )}
