@@ -19,8 +19,7 @@ import {
 import svitLogo from "@/assets/svit-logo-official.jpg";
 import { ForgotPassword } from "./ForgotPassword";
 
-// Developer password - in production this should be in environment variables
-const DEV_PASSWORD = "svit@dev2024";
+// No hardcoded passwords - authentication is handled through Supabase
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -53,28 +52,9 @@ export function RoleBasedAuthForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string>("STUDENT");
   const [authTab, setAuthTab] = useState<string>("login");
-  const [showDevDialog, setShowDevDialog] = useState(false);
-  const [devPassword, setDevPassword] = useState("");
-  const [devPasswordError, setDevPasswordError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const handleDevLogin = () => {
-    if (devPassword === DEV_PASSWORD) {
-      // Store developer mode in session storage
-      sessionStorage.setItem("devMode", "true");
-      toast({
-        title: "Developer Mode Activated",
-        description: "You now have full access to all features.",
-      });
-      setShowDevDialog(false);
-      setDevPassword("");
-      navigate("/dashboard");
-    } else {
-      setDevPasswordError("Invalid developer password");
-    }
-  };
-
+  
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
@@ -442,21 +422,6 @@ export function RoleBasedAuthForm() {
 
         <CardFooter className="flex-col gap-2 pt-2 pb-6">
           <div className="w-full h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-          
-          {/* Developer Mode Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              console.log("Developer Mode button clicked");
-              setShowDevDialog(true);
-            }}
-            className="text-xs border-primary/30 text-primary hover:text-primary-foreground hover:bg-primary transition-all duration-300 rounded-lg gap-2"
-          >
-            <Code className="h-3 w-3" />
-            Developer Mode
-          </Button>
-          
           <p className="text-xs text-muted-foreground text-center">
             © {new Date().getFullYear()} Sardar Vallabhbhai Patel Institute of Technology
           </p>
@@ -465,56 +430,6 @@ export function RoleBasedAuthForm() {
           </p>
         </CardFooter>
       </Card>
-
-      {/* Developer Mode Dialog */}
-      <Dialog open={showDevDialog} onOpenChange={setShowDevDialog}>
-        <DialogContent className="sm:max-w-md bg-card border-border backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-foreground">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent">
-                <Code className="h-5 w-5 text-primary-foreground" />
-              </div>
-              Developer Access
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              Enter the developer password to access full system controls.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="dev-password" className="text-sm font-medium text-foreground">
-                Developer Password
-              </Label>
-              <Input
-                id="dev-password"
-                type="password"
-                placeholder="Enter password..."
-                value={devPassword}
-                onChange={(e) => {
-                  setDevPassword(e.target.value);
-                  setDevPasswordError("");
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleDevLogin();
-                  }
-                }}
-                className="h-12 bg-secondary/50 border-secondary hover:border-primary/50 focus:border-primary transition-colors rounded-xl"
-              />
-              {devPasswordError && (
-                <p className="text-sm text-destructive">{devPasswordError}</p>
-              )}
-            </div>
-            <Button
-              onClick={handleDevLogin}
-              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90 transition-all duration-300 rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <Terminal className="mr-2 h-5 w-5" />
-              Enter Developer Mode
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
