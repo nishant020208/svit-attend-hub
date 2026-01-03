@@ -12,14 +12,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from "qrcode.react";
-import { Html5Qrcode, Html5QrcodeScannerState } from "html5-qrcode";
-import { CalendarIcon, QrCode, Scan, Camera, CameraOff, AlertCircle, CheckCircle } from "lucide-react";
+import { Html5Qrcode } from "html5-qrcode";
+import { CalendarIcon, QrCode, Scan, Camera, CameraOff, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const QR_READER_ID = "qr-reader-element";
+const QR_READER_ID = "qr-reader-container";
 
 export default function AttendanceQR() {
   const navigate = useNavigate();
@@ -44,17 +44,17 @@ export default function AttendanceQR() {
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [scanSuccess, setScanSuccess] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
-  const scannerMountedRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     checkAuth();
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
+    
     return () => {
-      cleanupScanner();
+      isMountedRef.current = false;
+      forceCleanup();
     };
   }, []);
 
@@ -64,21 +64,21 @@ export default function AttendanceQR() {
     }
   }, [role, roleLoading, userId]);
 
-  const cleanupScanner = useCallback(async () => {
+  const forceCleanup = async () => {
     if (html5QrCodeRef.current) {
       try {
-        const state = html5QrCodeRef.current.getState();
-        if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
-          await html5QrCodeRef.current.stop();
-        }
+        await html5QrCodeRef.current.stop();
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+      try {
         html5QrCodeRef.current.clear();
-      } catch (error) {
-        console.log("Cleanup error (safe to ignore):", error);
+      } catch (e) {
+        // Ignore cleanup errors
       }
       html5QrCodeRef.current = null;
     }
-    scannerMountedRef.current = false;
-  }, []);
+  };
 
   const checkAuth = async () => {
     try {
@@ -146,39 +146,49 @@ export default function AttendanceQR() {
     });
   };
 
-  const checkCameraPermission = async (): Promise<boolean> => {
+  const requestCameraPermission = async (): Promise<boolean> => {
     try {
-      // First check if we can enumerate devices
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      
-      if (videoDevices.length === 0) {
-        setCameraError("No camera found on this device");
+      // Check if mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraError("Camera API not supported. Please use a modern browser like Chrome or Safari.");
         return false;
       }
 
-      // Try to get camera permission
+      // Request camera permission
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: "environment" } 
+        video: { 
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
       });
       
-      // Stop the test stream immediately
-      stream.getTracks().forEach(track => track.stop());
+      // Stop the stream immediately after getting permission
+      stream.getTracks().forEach(track => {
+        track.stop();
+      });
       
       return true;
     } catch (error: any) {
       console.error("Camera permission error:", error);
       
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        setCameraError("Camera permission denied. Please allow camera access in your browser settings.");
+        setCameraError("Camera permission denied. Please allow camera access in your browser/phone settings and try again.");
       } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        setCameraError("No camera found on this device.");
+        setCameraError("No camera found. Please make sure your device has a camera.");
       } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-        setCameraError("Camera is in use by another application. Please close other apps using the camera.");
+        setCameraError("Camera is being used by another app. Please close other apps and try again.");
       } else if (error.name === 'OverconstrainedError') {
-        setCameraError("Camera constraints not supported. Try using a different browser.");
+        // Try with simpler constraints
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          stream.getTracks().forEach(track => track.stop());
+          return true;
+        } catch {
+          setCameraError("Camera not compatible. Please try a different browser.");
+        }
       } else {
-        setCameraError(`Camera error: ${error.message || 'Unknown error'}`);
+        setCameraError(`Camera error: ${error.message || 'Please check your camera settings.'}`);
       }
       
       return false;
@@ -186,94 +196,119 @@ export default function AttendanceQR() {
   };
 
   const startScanning = async () => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
     setCameraError(null);
     setScanSuccess(false);
     setScanning(true);
     setCameraReady(false);
 
-    // Wait for the DOM element to be rendered
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Clean up any existing scanner first
+    await forceCleanup();
 
-    const readerElement = document.getElementById(QR_READER_ID);
-    if (!readerElement) {
-      setCameraError("Scanner container not found. Please refresh and try again.");
+    // Request camera permission first
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
       setScanning(false);
+      setIsProcessing(false);
       return;
     }
 
-    // Check camera permission first
-    const hasPermission = await checkCameraPermission();
-    if (!hasPermission) {
+    // Small delay to ensure DOM is ready
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    if (!isMountedRef.current) {
+      setIsProcessing(false);
+      return;
+    }
+
+    const container = document.getElementById(QR_READER_ID);
+    if (!container) {
+      setCameraError("Scanner container not ready. Please refresh the page.");
       setScanning(false);
+      setIsProcessing(false);
       return;
     }
 
     try {
-      // Cleanup any existing instance
-      await cleanupScanner();
+      // Create fresh scanner instance
+      const scanner = new Html5Qrcode(QR_READER_ID, { verbose: false });
+      html5QrCodeRef.current = scanner;
 
-      // Create new instance
-      html5QrCodeRef.current = new Html5Qrcode(QR_READER_ID);
-      scannerMountedRef.current = true;
-
-      const config = {
+      const qrConfig = {
         fps: 10,
-        qrbox: { width: 250, height: 250 },
+        qrbox: { width: 220, height: 220 },
         aspectRatio: 1.0,
-        disableFlip: false,
       };
 
-      await html5QrCodeRef.current.start(
+      await scanner.start(
         { facingMode: "environment" },
-        config,
+        qrConfig,
         async (decodedText) => {
-          console.log("QR Code scanned:", decodedText);
+          if (!isMountedRef.current) return;
+          
+          console.log("QR Code detected:", decodedText);
+          setScanSuccess(true);
+          
           try {
             const qrPayload = JSON.parse(decodedText);
-            setScanSuccess(true);
             await stopScanning();
             await markAttendance(qrPayload);
-          } catch (error) {
-            console.error("QR parse error:", error);
+          } catch (parseError) {
+            console.error("QR parse error:", parseError);
             toast({
               title: "Invalid QR Code",
               description: "This doesn't appear to be a valid attendance QR code",
               variant: "destructive",
             });
+            setScanSuccess(false);
           }
         },
         () => {
-          // QR code scanning in progress - no action needed for failed frames
+          // Scanning in progress - no action needed
         }
       );
 
-      setCameraReady(true);
-      toast({
-        title: "Camera Started",
-        description: "Point your camera at the attendance QR code",
-      });
+      if (isMountedRef.current) {
+        setCameraReady(true);
+        toast({
+          title: "Camera Ready",
+          description: "Point at the QR code to mark attendance",
+        });
+      }
     } catch (error: any) {
       console.error("Scanner start error:", error);
       
-      let errorMessage = "Failed to start camera";
-      if (error.message?.includes("Permission")) {
-        errorMessage = "Camera permission denied. Please allow camera access.";
-      } else if (error.message?.includes("NotFound") || error.message?.includes("not found")) {
-        errorMessage = "No camera found on this device.";
-      } else if (error.message) {
-        errorMessage = error.message;
+      if (isMountedRef.current) {
+        if (error.message?.toLowerCase().includes("permission")) {
+          setCameraError("Camera permission denied. Go to browser settings to allow camera access.");
+        } else if (error.message?.toLowerCase().includes("not found") || error.message?.toLowerCase().includes("no camera")) {
+          setCameraError("No camera detected. Please check your device.");
+        } else if (error.message?.toLowerCase().includes("already started")) {
+          setCameraError("Camera is already in use. Please refresh the page.");
+        } else {
+          setCameraError(error.message || "Failed to start camera. Please try again.");
+        }
+        setScanning(false);
       }
-      
-      setCameraError(errorMessage);
-      setScanning(false);
-      await cleanupScanner();
+      await forceCleanup();
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const stopScanning = async () => {
-    await cleanupScanner();
-    setScanning(false);
-    setCameraReady(false);
+  const stopScanning = useCallback(async () => {
+    await forceCleanup();
+    if (isMountedRef.current) {
+      setScanning(false);
+      setCameraReady(false);
+    }
+  }, []);
+
+  const retryCamera = async () => {
+    setCameraError(null);
+    await startScanning();
   };
 
   const markAttendance = async (qrPayload: any) => {
@@ -294,7 +329,7 @@ export default function AttendanceQR() {
         .eq("student_id", studentId)
         .eq("subject", qrPayload.subject)
         .eq("date", qrPayload.date)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         toast({
@@ -471,27 +506,44 @@ export default function AttendanceQR() {
               {cameraError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{cameraError}</AlertDescription>
-                </Alert>
-              )}
-
-              {/* Camera Permission Info */}
-              {!scanning && !cameraError && (
-                <Alert>
-                  <Camera className="h-4 w-4" />
-                  <AlertDescription>
-                    Make sure to allow camera access when prompted. The camera will be used to scan the QR code.
+                  <AlertDescription className="flex flex-col gap-2">
+                    <span>{cameraError}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={retryCamera}
+                      className="w-fit mt-2"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Try Again
+                    </Button>
                   </AlertDescription>
                 </Alert>
               )}
 
-              {/* Scanner Container - Always in DOM but hidden when not scanning */}
+              {/* Camera Permission Info */}
+              {!scanning && !cameraError && !scanSuccess && (
+                <Alert>
+                  <Camera className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Important:</strong> Allow camera access when prompted. For best results:
+                    <ul className="list-disc ml-4 mt-1 text-xs">
+                      <li>Use Chrome or Safari browser</li>
+                      <li>Ensure good lighting</li>
+                      <li>Hold the QR code steady</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Scanner Container */}
               <div 
                 id={QR_READER_ID}
                 className={cn(
-                  "w-full rounded-lg overflow-hidden border-2 border-border bg-black transition-all",
-                  scanning ? "min-h-[300px] sm:min-h-[400px]" : "h-0 border-0"
+                  "w-full rounded-lg overflow-hidden bg-black mx-auto transition-all duration-300",
+                  scanning ? "min-h-[280px] sm:min-h-[350px] max-w-md border-2 border-primary" : "h-0"
                 )}
+                style={{ display: scanning ? 'block' : 'none' }}
               />
 
               {/* Camera Status */}
@@ -513,10 +565,10 @@ export default function AttendanceQR() {
                 <Button 
                   onClick={startScanning} 
                   className="w-full gradient-primary hover-scale transition-smooth"
-                  disabled={!studentId}
+                  disabled={!studentId || isProcessing}
                 >
                   <Camera className="mr-2 h-4 w-4" />
-                  {studentId ? "Start Camera to Scan" : "Loading student data..."}
+                  {isProcessing ? "Starting..." : studentId ? "Open Camera to Scan" : "Loading student data..."}
                 </Button>
               ) : (
                 <Button 
@@ -531,7 +583,7 @@ export default function AttendanceQR() {
 
               {/* Help Text */}
               <p className="text-xs text-center text-muted-foreground">
-                Tip: Make sure you're in a well-lit area and hold your camera steady
+                💡 Tip: If camera doesn't start, try refreshing the page or use a different browser
               </p>
             </CardContent>
           </Card>
