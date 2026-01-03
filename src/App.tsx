@@ -31,6 +31,7 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const StudentManagement = lazy(() => import("./pages/StudentManagement"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const Install = lazy(() => import("./pages/Install"));
+const ParentLinks = lazy(() => import("./pages/ParentLinks"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -73,6 +74,7 @@ const App = () => (
               <Route path="/subjects" element={<SubjectManagement />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/students" element={<StudentManagement />} />
+              <Route path="/parent-links" element={<ParentLinks />} />
               <Route path="/about" element={<AboutUs />} />
               <Route path="/install" element={<Install />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
