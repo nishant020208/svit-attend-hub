@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut, GraduationCap, Bell, Users, BookOpen, Layers, Eye, Home, User, Shield } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut, GraduationCap, Bell, Users, Link2, BookOpen, Layers, Eye, Home, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
@@ -27,6 +27,7 @@ const tabs = [
   { name: "Reports", path: "/reports", icon: FileText, roles: ["ADMIN", "FACULTY"] },
   { name: "Notifications", path: "/notifications", icon: Bell, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
   { name: "Students", path: "/students", icon: Users, roles: ["ADMIN"] },
+  { name: "Parent Links", path: "/parent-links", icon: Link2, roles: ["ADMIN"] },
   { name: "Courses", path: "/courses", icon: BookOpen, roles: ["ADMIN"] },
   { name: "Subjects", path: "/subjects", icon: Layers, roles: ["ADMIN"] },
   { name: "Settings", path: "/settings", icon: Settings, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },

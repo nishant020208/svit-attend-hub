@@ -45,6 +45,8 @@ export default function AttendanceQR() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [scanSuccess, setScanSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState<Array<{ id: string; label: string }>>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string>("");
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const isMountedRef = useRef(true);
 
@@ -148,56 +150,53 @@ export default function AttendanceQR() {
 
   const requestCameraPermission = async (): Promise<boolean> => {
     try {
-      // Check if mediaDevices is available
+      // Camera requires a secure context in mobile browsers
+      if (location.protocol !== "https:" && location.hostname !== "localhost") {
+        setCameraError("Camera requires HTTPS. Please open the app on a secure (https) link or install the app and try again.");
+        return false;
+      }
+
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setCameraError("Camera API not supported. Please use a modern browser like Chrome or Safari.");
         return false;
       }
 
-      // Request camera permission
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      });
-      
+      // Keep constraints simple for maximum device compatibility
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+
       // Stop the stream immediately after getting permission
-      stream.getTracks().forEach(track => {
-        track.stop();
-      });
-      
+      stream.getTracks().forEach((track) => track.stop());
+
       return true;
     } catch (error: any) {
       console.error("Camera permission error:", error);
-      
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
         setCameraError("Camera permission denied. Please allow camera access in your browser/phone settings and try again.");
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
         setCameraError("No camera found. Please make sure your device has a camera.");
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
         setCameraError("Camera is being used by another app. Please close other apps and try again.");
-      } else if (error.name === 'OverconstrainedError') {
+      } else if (error.name === "OverconstrainedError") {
         // Try with simpler constraints
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          stream.getTracks().forEach(track => track.stop());
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          stream.getTracks().forEach((track) => track.stop());
           return true;
         } catch {
           setCameraError("Camera not compatible. Please try a different browser.");
         }
       } else {
-        setCameraError(`Camera error: ${error.message || 'Please check your camera settings.'}`);
+        setCameraError(`Camera error: ${error.message || "Please check your camera settings."}`);
       }
-      
+
       return false;
     }
   };
 
   const startScanning = async () => {
     if (isProcessing) return;
-    
+
     setIsProcessing(true);
     setCameraError(null);
     setScanSuccess(false);
@@ -215,8 +214,8 @@ export default function AttendanceQR() {
       return;
     }
 
-    // Small delay to ensure DOM is ready
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Give the browser a moment to release the permission stream
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     if (!isMountedRef.current) {
       setIsProcessing(false);
@@ -240,17 +239,34 @@ export default function AttendanceQR() {
         fps: 10,
         qrbox: { width: 220, height: 220 },
         aspectRatio: 1.0,
+        disableFlip: true,
       };
 
-      await scanner.start(
-        { facingMode: "environment" },
+      // Prefer explicit camera id on mobile (facingMode can hang on some devices)
+      let cameras: Array<{ id: string; label: string }> = [];
+      try {
+        cameras = await Html5Qrcode.getCameras();
+        if (isMountedRef.current) setAvailableCameras(cameras);
+      } catch {
+        // ignore
+      }
+
+      const bestCameraId =
+        selectedCameraId ||
+        cameras.find((c) => /back|rear|environment/i.test(c.label))?.id ||
+        cameras[0]?.id ||
+        "";
+
+      const cameraSource: any = bestCameraId ? bestCameraId : { facingMode: "environment" };
+
+      const startPromise = scanner.start(
+        cameraSource,
         qrConfig,
         async (decodedText) => {
           if (!isMountedRef.current) return;
-          
-          console.log("QR Code detected:", decodedText);
+
           setScanSuccess(true);
-          
+
           try {
             const qrPayload = JSON.parse(decodedText);
             await stopScanning();
@@ -270,6 +286,12 @@ export default function AttendanceQR() {
         }
       );
 
+      // Avoid infinite "Starting camera..." by timing out
+      await Promise.race([
+        startPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Camera start timed out")), 10000)),
+      ]);
+
       if (isMountedRef.current) {
         setCameraReady(true);
         toast({
@@ -279,13 +301,16 @@ export default function AttendanceQR() {
       }
     } catch (error: any) {
       console.error("Scanner start error:", error);
-      
+
       if (isMountedRef.current) {
-        if (error.message?.toLowerCase().includes("permission")) {
+        const msg = (error?.message || "").toLowerCase();
+        if (msg.includes("permission")) {
           setCameraError("Camera permission denied. Go to browser settings to allow camera access.");
-        } else if (error.message?.toLowerCase().includes("not found") || error.message?.toLowerCase().includes("no camera")) {
+        } else if (msg.includes("not found") || msg.includes("no camera")) {
           setCameraError("No camera detected. Please check your device.");
-        } else if (error.message?.toLowerCase().includes("already started")) {
+        } else if (msg.includes("timed out")) {
+          setCameraError("Camera took too long to start. Try selecting a different camera, closing other apps, then try again.");
+        } else if (msg.includes("already started")) {
           setCameraError("Camera is already in use. Please refresh the page.");
         } else {
           setCameraError(error.message || "Failed to start camera. Please try again.");
@@ -534,6 +559,30 @@ export default function AttendanceQR() {
                     </ul>
                   </AlertDescription>
                 </Alert>
+              )}
+
+              {/* Camera selection (helps on phones where facingMode hangs) */}
+              {availableCameras.length > 1 && !scanning && (
+                <div className="space-y-2">
+                  <Label>Camera</Label>
+                  <Select
+                    value={selectedCameraId || "auto"}
+                    onValueChange={(value) => setSelectedCameraId(value === "auto" ? "" : value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select camera" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto (recommended)</SelectItem>
+                      {availableCameras.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.label || c.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">If the camera stays on loading, pick a different camera here.</p>
+                </div>
               )}
 
               {/* Scanner Container */}
