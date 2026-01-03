@@ -271,6 +271,10 @@ export default function AdminDashboard() {
                 <Shield className="mr-2 h-5 w-5" />
                 User Management & Whitelist
               </Button>
+              <Button onClick={() => navigate("/parent-links")} variant="outline" className="w-full justify-start h-auto py-4">
+                <Users className="mr-2 h-5 w-5" />
+                Parent–Student Links
+              </Button>
               <Button onClick={() => navigate("/attendance")} variant="outline" className="w-full justify-start h-auto py-4">
                 <Activity className="mr-2 h-5 w-5" />
                 Attendance Overview
