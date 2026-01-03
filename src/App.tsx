@@ -1,62 +1,86 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
+// Eager load critical pages
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import StudentDashboard from "./pages/StudentDashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import ParentDashboard from "./pages/ParentDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import Attendance from "./pages/Attendance";
-import AttendanceQR from "./pages/AttendanceQR";
-import LeaveManagement from "./pages/LeaveManagement";
-import Timetable from "./pages/Timetable";
-import Announcements from "./pages/Announcements";
-import Reports from "./pages/Reports";
-import Results from "./pages/Results";
-import Settings from "./pages/Settings";
-import CourseManagement from "./pages/CourseManagement";
-import SubjectManagement from "./pages/SubjectManagement";
-import Notifications from "./pages/Notifications";
-import StudentManagement from "./pages/StudentManagement";
-import AboutUs from "./pages/AboutUs";
-import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Lazy load other pages for faster initial load
+const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
+const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
+const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const Attendance = lazy(() => import("./pages/Attendance"));
+const AttendanceQR = lazy(() => import("./pages/AttendanceQR"));
+const LeaveManagement = lazy(() => import("./pages/LeaveManagement"));
+const Timetable = lazy(() => import("./pages/Timetable"));
+const Announcements = lazy(() => import("./pages/Announcements"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Results = lazy(() => import("./pages/Results"));
+const Settings = lazy(() => import("./pages/Settings"));
+const CourseManagement = lazy(() => import("./pages/CourseManagement"));
+const SubjectManagement = lazy(() => import("./pages/SubjectManagement"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const StudentManagement = lazy(() => import("./pages/StudentManagement"));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
+const Install = lazy(() => import("./pages/Install"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (previously cacheTime)
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <LoadingSpinner />
+  </div>
+);
 
 const App = () => (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="app-theme">
-        <TooltipProvider>
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="app-theme">
+      <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/attendance-qr" element={<AttendanceQR />} />
-          <Route path="/leave" element={<LeaveManagement />} />
-          <Route path="/timetable" element={<Timetable />} />
-          <Route path="/announcements" element={<Announcements />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/courses" element={<CourseManagement />} />
-          <Route path="/subjects" element={<SubjectManagement />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/students" element={<StudentManagement />} />
-          <Route path="/about" element={<AboutUs />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/attendance" element={<Attendance />} />
+              <Route path="/attendance-qr" element={<AttendanceQR />} />
+              <Route path="/leave" element={<LeaveManagement />} />
+              <Route path="/timetable" element={<Timetable />} />
+              <Route path="/announcements" element={<Announcements />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/courses" element={<CourseManagement />} />
+              <Route path="/subjects" element={<SubjectManagement />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/students" element={<StudentManagement />} />
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/install" element={<Install />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
