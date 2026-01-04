@@ -8,26 +8,31 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useAnnouncementNotifications } from "@/hooks/useAnnouncementNotifications";
 import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
+import { DashboardMotivation } from "@/components/dashboard/DashboardMotivation";
+import { StudentDashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import {
+  useStudentProfile,
+  useStudentData,
+  useAttendanceStats,
+  usePendingLeaves,
+  useRecentAnnouncements,
+} from "@/hooks/useDashboardQueries";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [student, setStudent] = useState<any>(null);
-  
+  const [userId, setUserId] = useState<string | undefined>();
+  const [authChecked, setAuthChecked] = useState(false);
+
   // Enable announcement notifications
-  useAnnouncementNotifications(user?.id);
-  
-  const [stats, setStats] = useState({
-    attendancePercentage: 0,
-    presentDays: 0,
-    totalDays: 0,
-    pendingLeaves: 0,
-    upcomingClasses: 0,
-  });
-  const [recentAnnouncements, setRecentAnnouncements] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  useAnnouncementNotifications(userId);
+
+  // React Query hooks for caching
+  const { data: profile, isLoading: profileLoading } = useStudentProfile(userId);
+  const { data: student, isLoading: studentLoading } = useStudentData(userId);
+  const { data: attendanceStats, isLoading: attendanceLoading } = useAttendanceStats(student?.id);
+  const { data: pendingLeaves, isLoading: leavesLoading } = usePendingLeaves(student?.id);
+  const { data: recentAnnouncements, isLoading: announcementsLoading } = useRecentAnnouncements(3);
 
   useEffect(() => {
     checkAuth();
@@ -42,34 +47,7 @@ export default function StudentDashboard() {
         return;
       }
 
-      setUser(session.user);
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      setProfile(profileData);
-
-      if (profileData?.role !== "STUDENT") {
-        navigate("/dashboard");
-        return;
-      }
-
-      const { data: studentData } = await supabase
-        .from("students")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .single();
-
-      setStudent(studentData);
-      
-      await Promise.all([
-        fetchAttendanceStats(studentData?.id),
-        fetchLeaveStats(studentData?.id),
-        fetchAnnouncements(),
-      ]);
+      setUserId(session.user.id);
     } catch (error: any) {
       console.error("Auth error:", error);
       toast({
@@ -78,73 +56,41 @@ export default function StudentDashboard() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setAuthChecked(true);
     }
   };
 
-  const fetchAttendanceStats = async (studentId: string) => {
-    if (!studentId) return;
-    
-    const { data, count } = await supabase
-      .from("attendance")
-      .select("*", { count: "exact" })
-      .eq("student_id", studentId);
+  useEffect(() => {
+    if (profile && profile.role !== "STUDENT") {
+      navigate("/dashboard");
+    }
+  }, [profile, navigate]);
 
-    const presentCount = data?.filter(a => a.status === "PRESENT").length || 0;
-    const percentage = count ? Math.round((presentCount / count) * 100) : 0;
+  const isLoading = !authChecked || profileLoading || studentLoading;
 
-    setStats(prev => ({
-      ...prev,
-      attendancePercentage: percentage,
-      presentDays: presentCount,
-      totalDays: count || 0,
-    }));
-  };
-
-  const fetchLeaveStats = async (studentId: string) => {
-    if (!studentId) return;
-    
-    const { count } = await supabase
-      .from("leave_requests")
-      .select("*", { count: "exact", head: true })
-      .eq("student_id", studentId)
-      .eq("status", "PENDING");
-
-    setStats(prev => ({ ...prev, pendingLeaves: count || 0 }));
-  };
-
-  const fetchAnnouncements = async () => {
-    const { data } = await supabase
-      .from("announcements")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(3);
-
-    setRecentAnnouncements(data || []);
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+        <FloatingGeometry variant="default" />
+        <StudentDashboardSkeleton />
       </div>
     );
   }
 
-  const attendanceColor = stats.attendancePercentage >= 75 ? "text-green-600" : "text-destructive";
+  const attendanceColor = (attendanceStats?.percentage || 0) >= 75 ? "text-green-600" : "text-destructive";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <FloatingGeometry variant="default" />
       <TopTabs
-        userEmail={user?.email}
+        userEmail={userId ? undefined : undefined}
         userName={profile?.name}
         userRole={profile?.role}
       />
       <main className="container mx-auto p-4 md:p-6">
+        {/* Motivation Quote */}
+        <DashboardMotivation />
+
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
@@ -163,9 +109,11 @@ export default function StudentDashboard() {
               <TrendingUp className={`h-5 w-5 ${attendanceColor}`} />
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold ${attendanceColor}`}>{stats.attendancePercentage}%</div>
+              <div className={`text-3xl font-bold ${attendanceColor}`}>
+                {attendanceLoading ? "..." : `${attendanceStats?.percentage || 0}%`}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.presentDays} / {stats.totalDays} days present
+                {attendanceStats?.presentDays || 0} / {attendanceStats?.totalDays || 0} days present
               </p>
             </CardContent>
           </Card>
@@ -176,7 +124,9 @@ export default function StudentDashboard() {
               <FileText className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.pendingLeaves}</div>
+              <div className="text-3xl font-bold">
+                {leavesLoading ? "..." : pendingLeaves || 0}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
             </CardContent>
           </Card>
@@ -198,7 +148,9 @@ export default function StudentDashboard() {
               <AlertCircle className="h-5 w-5 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{recentAnnouncements.length}</div>
+              <div className="text-3xl font-bold">
+                {announcementsLoading ? "..." : recentAnnouncements?.length || 0}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">New updates</p>
             </CardContent>
           </Card>
@@ -233,9 +185,18 @@ export default function StudentDashboard() {
               <CardDescription>Latest updates from faculty</CardDescription>
             </CardHeader>
             <CardContent>
-              {recentAnnouncements.length > 0 ? (
+              {announcementsLoading ? (
                 <div className="space-y-4">
-                  {recentAnnouncements.map((announcement) => (
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="border-l-2 border-muted pl-4 py-2 animate-pulse">
+                      <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+                      <div className="h-3 bg-muted rounded w-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : (recentAnnouncements?.length || 0) > 0 ? (
+                <div className="space-y-4">
+                  {recentAnnouncements?.map((announcement) => (
                     <div key={announcement.id} className="border-l-2 border-primary pl-4 py-2">
                       <h4 className="font-semibold text-sm">{announcement.title}</h4>
                       <p className="text-xs text-muted-foreground line-clamp-2">{announcement.content}</p>

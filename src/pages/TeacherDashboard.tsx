@@ -7,21 +7,26 @@ import { Users, ClipboardCheck, FileText, Calendar, Clock, BookOpen } from "luci
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
+import { DashboardMotivation } from "@/components/dashboard/DashboardMotivation";
+import { TeacherDashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import {
+  useStudentProfile,
+  useTeacherStats,
+  useTodaySchedule,
+  useTeacherPendingLeaves,
+} from "@/hooks/useDashboardQueries";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [stats, setStats] = useState({
-    totalClasses: 0,
-    todayClasses: 0,
-    pendingLeaves: 0,
-    studentsCount: 0,
-  });
-  const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
-  const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | undefined>();
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // React Query hooks for caching
+  const { data: profile, isLoading: profileLoading } = useStudentProfile(userId);
+  const { data: stats, isLoading: statsLoading } = useTeacherStats(userId);
+  const { data: todaySchedule, isLoading: scheduleLoading } = useTodaySchedule(userId);
+  const { data: pendingLeavesData, isLoading: leavesLoading } = useTeacherPendingLeaves();
 
   useEffect(() => {
     checkAuth();
@@ -36,26 +41,7 @@ export default function TeacherDashboard() {
         return;
       }
 
-      setUser(session.user);
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      setProfile(profileData);
-
-      if (profileData?.role !== "FACULTY") {
-        navigate("/dashboard");
-        return;
-      }
-
-      await Promise.all([
-        fetchTeacherStats(session.user.id),
-        fetchTodaySchedule(session.user.id),
-        fetchPendingLeaves(),
-      ]);
+      setUserId(session.user.id);
     } catch (error: any) {
       console.error("Auth error:", error);
       toast({
@@ -64,70 +50,23 @@ export default function TeacherDashboard() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setAuthChecked(true);
     }
   };
 
-  const fetchTeacherStats = async (facultyId: string) => {
-    const { data: classes, count } = await supabase
-      .from("timetable")
-      .select("*", { count: "exact" })
-      .eq("faculty_id", facultyId);
+  useEffect(() => {
+    if (profile && profile.role !== "FACULTY") {
+      navigate("/dashboard");
+    }
+  }, [profile, navigate]);
 
-    const today = new Date().getDay();
-    const todayCount = classes?.filter(c => c.day_of_week === today).length || 0;
+  const isLoading = !authChecked || profileLoading;
 
-    const { count: studentCount } = await supabase
-      .from("students")
-      .select("*", { count: "exact", head: true });
-
-    setStats({
-      totalClasses: count || 0,
-      todayClasses: todayCount,
-      pendingLeaves: 0,
-      studentsCount: studentCount || 0,
-    });
-  };
-
-  const fetchTodaySchedule = async (facultyId: string) => {
-    const today = new Date().getDay();
-    const { data } = await supabase
-      .from("timetable")
-      .select("*")
-      .eq("faculty_id", facultyId)
-      .eq("day_of_week", today)
-      .order("start_time");
-
-    setTodaySchedule(data || []);
-  };
-
-  const fetchPendingLeaves = async () => {
-    const { data, count } = await supabase
-      .from("leave_requests")
-      .select(`
-        *,
-        students:student_id (
-          roll_number,
-          course,
-          section,
-          profiles:user_id (name)
-        )
-      `)
-      .eq("status", "PENDING")
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    setPendingLeaves(data || []);
-    setStats(prev => ({ ...prev, pendingLeaves: count || 0 }));
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
+        <FloatingGeometry variant="minimal" />
+        <TeacherDashboardSkeleton />
       </div>
     );
   }
@@ -136,11 +75,14 @@ export default function TeacherDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
       <FloatingGeometry variant="minimal" />
       <TopTabs
-        userEmail={user?.email}
+        userEmail={undefined}
         userName={profile?.name}
         userRole={profile?.role}
       />
       <main className="container mx-auto p-4 md:p-6">
+        {/* Motivation Quote */}
+        <DashboardMotivation />
+
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             Faculty Dashboard
@@ -158,7 +100,9 @@ export default function TeacherDashboard() {
               <BookOpen className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.totalClasses}</div>
+              <div className="text-3xl font-bold">
+                {statsLoading ? "..." : stats?.totalClasses || 0}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Weekly schedule</p>
             </CardContent>
           </Card>
@@ -169,7 +113,9 @@ export default function TeacherDashboard() {
               <Clock className="h-5 w-5 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.todayClasses}</div>
+              <div className="text-3xl font-bold">
+                {statsLoading ? "..." : stats?.todayClasses || 0}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Scheduled for today</p>
             </CardContent>
           </Card>
@@ -180,7 +126,9 @@ export default function TeacherDashboard() {
               <FileText className="h-5 w-5 text-orange-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.pendingLeaves}</div>
+              <div className="text-3xl font-bold">
+                {leavesLoading ? "..." : pendingLeavesData?.count || 0}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Leave requests</p>
             </CardContent>
           </Card>
@@ -191,7 +139,9 @@ export default function TeacherDashboard() {
               <Users className="h-5 w-5 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats.studentsCount}</div>
+              <div className="text-3xl font-bold">
+                {statsLoading ? "..." : stats?.studentsCount || 0}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Active enrollment</p>
             </CardContent>
           </Card>
@@ -208,9 +158,24 @@ export default function TeacherDashboard() {
               <CardDescription>Your classes for today</CardDescription>
             </CardHeader>
             <CardContent>
-              {todaySchedule.length > 0 ? (
+              {scheduleLoading ? (
                 <div className="space-y-3">
-                  {todaySchedule.map((schedule) => (
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 animate-pulse">
+                      <div>
+                        <div className="h-4 bg-muted rounded w-32 mb-2" />
+                        <div className="h-3 bg-muted rounded w-48" />
+                      </div>
+                      <div className="text-right">
+                        <div className="h-4 bg-muted rounded w-12 mb-1" />
+                        <div className="h-3 bg-muted rounded w-10" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (todaySchedule?.length || 0) > 0 ? (
+                <div className="space-y-3">
+                  {todaySchedule?.map((schedule) => (
                     <div key={schedule.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                       <div>
                         <p className="font-semibold">{schedule.subject}</p>
@@ -240,9 +205,24 @@ export default function TeacherDashboard() {
               <CardDescription>Students awaiting your approval</CardDescription>
             </CardHeader>
             <CardContent>
-              {pendingLeaves.length > 0 ? (
+              {leavesLoading ? (
                 <div className="space-y-3">
-                  {pendingLeaves.slice(0, 3).map((leave: any) => (
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="p-3 rounded-lg bg-muted/50 animate-pulse">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <div className="h-4 bg-muted rounded w-32 mb-2" />
+                          <div className="h-3 bg-muted rounded w-24" />
+                        </div>
+                        <div className="h-5 bg-muted rounded w-16" />
+                      </div>
+                      <div className="h-3 bg-muted rounded w-48" />
+                    </div>
+                  ))}
+                </div>
+              ) : (pendingLeavesData?.leaves?.length || 0) > 0 ? (
+                <div className="space-y-3">
+                  {pendingLeavesData?.leaves?.slice(0, 3).map((leave: any) => (
                     <div key={leave.id} className="p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                       <div className="flex justify-between items-start mb-2">
                         <div>
