@@ -369,3 +369,33 @@ button[class*="lovable"],
     padding-bottom: 5rem !important;
   }
 }
+
+/* Mobile keyboard handling - prevent layout shift */
+@supports (height: 100dvh) {
+  .keyboard-safe {
+    min-height: 100dvh;
+  }
+}
+
+/* Hide fixed elements when keyboard is open on mobile */
+@media (max-width: 639px) {
+  .keyboard-hide {
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+  
+  /* Smooth input focus handling */
+  input:focus,
+  textarea:focus {
+    scroll-margin-bottom: 100px;
+  }
+  
+  /* Prevent zoom on iOS */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
