@@ -11,6 +11,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Badge } from "@/components/ui/badge";
+import { DashboardMotivation } from "@/components/dashboard/DashboardMotivation";
 
 type RecentResult = {
   id: string;
@@ -224,6 +225,9 @@ export default function ParentDashboard() {
       <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
 
       <main className="container mx-auto p-4 md:p-6 space-y-6">
+        {/* Motivation Quote */}
+        <DashboardMotivation />
+        
         <header>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground">Parent Dashboard</h1>
           <p className="text-muted-foreground">Attendance, results, timetable and announcements for all linked children.</p>
