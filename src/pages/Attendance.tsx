@@ -25,6 +25,11 @@ export default function Attendance() {
   const [students, setStudents] = useState<any[]>([]);
   const [attendanceData, setAttendanceData] = useState<any>({});
   
+  // Dynamic data from database
+  const [courses, setCourses] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
@@ -40,6 +45,17 @@ export default function Attendance() {
       fetchStudentAttendance(userId);
     }
   }, [role, roleLoading, userId]);
+
+  const fetchDropdownData = async () => {
+    const [coursesRes, sectionsRes, subjectsRes] = await Promise.all([
+      supabase.from("courses").select("*").order("name"),
+      supabase.from("sections").select("*").order("name"),
+      supabase.from("subjects").select("*").order("name"),
+    ]);
+    setCourses(coursesRes.data || []);
+    setSections(sectionsRes.data || []);
+    setSubjects(subjectsRes.data || []);
+  };
 
   const checkAuth = async () => {
     try {
@@ -60,6 +76,8 @@ export default function Attendance() {
 
       if (profileError) throw profileError;
       setProfile(profileData);
+      
+      await fetchDropdownData();
     } catch (error: any) {
       console.error("Auth error:", error);
       navigate("/auth");
@@ -235,8 +253,11 @@ export default function Attendance() {
                         <SelectValue placeholder="Select course" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="B.Tech">B.Tech</SelectItem>
-                        <SelectItem value="M.Tech">M.Tech</SelectItem>
+                        {courses.map((course) => (
+                          <SelectItem key={course.id} value={course.name}>
+                            {course.name} ({course.code})
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -261,19 +282,28 @@ export default function Attendance() {
                         <SelectValue placeholder="Select section" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="A">Section A</SelectItem>
-                        <SelectItem value="B">Section B</SelectItem>
-                        <SelectItem value="C">Section C</SelectItem>
+                        {sections.map((section) => (
+                          <SelectItem key={section.id} value={section.name}>
+                            {section.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
                     <Label>Subject</Label>
-                    <Input
-                      placeholder="Enter subject name"
-                      value={selectedSubject}
-                      onChange={(e) => setSelectedSubject(e.target.value)}
-                    />
+                    <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select subject" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.name}>
+                            {subject.name} ({subject.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label>Date</Label>
