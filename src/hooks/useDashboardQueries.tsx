@@ -161,17 +161,24 @@ export function useTeacherPendingLeaves() {
   });
 }
 
-// Admin Dashboard Queries
+// Admin Dashboard Queries - Count from WHITELIST (whitelisted users) not just registered
 export function useAdminStats() {
   return useQuery({
     queryKey: ["admin-stats"],
     queryFn: async () => {
-      const [studentsRes, facultyRes, parentsRes, attendanceRes, leavesRes] = await Promise.all([
-        supabase.from("students").select("*"),
-        supabase.from("profiles").select("*").eq("role", "FACULTY"),
-        supabase.from("profiles").select("*").eq("role", "PARENT"),
+      // Count from whitelist table - these are all users admin has added
+      const [
+        whitelistStudentsRes,
+        whitelistFacultyRes,
+        whitelistParentsRes,
+        attendanceRes,
+        leavesRes
+      ] = await Promise.all([
+        supabase.from("whitelist").select("*", { count: "exact" }).eq("role", "STUDENT"),
+        supabase.from("whitelist").select("*", { count: "exact" }).eq("role", "FACULTY"),
+        supabase.from("whitelist").select("*", { count: "exact" }).eq("role", "PARENT"),
         supabase.from("attendance").select("*").eq("date", new Date().toISOString().split("T")[0]),
-        supabase.from("leave_requests").select("*").eq("status", "PENDING"),
+        supabase.from("leave_requests").select("*", { count: "exact" }).eq("status", "PENDING"),
       ]);
 
       const presentToday = attendanceRes.data?.filter(a => a.status === "PRESENT").length || 0;
@@ -179,9 +186,9 @@ export function useAdminStats() {
       const attendanceRate = totalStudentsToday > 0 ? Math.round((presentToday / totalStudentsToday) * 100) : 0;
 
       return {
-        totalStudents: studentsRes.data?.length || 0,
-        totalFaculty: facultyRes.data?.length || 0,
-        totalParents: parentsRes.data?.length || 0,
+        totalStudents: whitelistStudentsRes.data?.length || 0,
+        totalFaculty: whitelistFacultyRes.data?.length || 0,
+        totalParents: whitelistParentsRes.data?.length || 0,
         todayAttendance: presentToday,
         attendanceRate,
         pendingLeaves: leavesRes.data?.length || 0,
