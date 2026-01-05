@@ -208,6 +208,11 @@
 }
 
 @layer utilities {
+  /* Title text color fix - always visible */
+  .text-title {
+    color: hsl(var(--foreground));
+  }
+  
   /* Gradient Utilities */
   .gradient-primary {
     background: var(--gradient-primary);

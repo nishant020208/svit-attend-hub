@@ -71,6 +71,7 @@ export default function Results() {
   const [students, setStudents] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
   
   const [selectedExam, setSelectedExam] = useState<string>("");
   const [showCreateExam, setShowCreateExam] = useState(false);
@@ -123,6 +124,7 @@ export default function Results() {
         fetchGradeConfig(),
         fetchCourses(),
         fetchSubjects(),
+        fetchSections(),
       ]);
     } catch (error) {
       console.error("Auth error:", error);
@@ -156,8 +158,13 @@ export default function Results() {
   };
 
   const fetchSubjects = async () => {
-    const { data, error } = await supabase.from("subjects").select("*");
+    const { data, error } = await supabase.from("subjects").select("*").order("name");
     if (!error && data) setSubjects(data);
+  };
+
+  const fetchSections = async () => {
+    const { data, error } = await supabase.from("sections").select("*").order("name");
+    if (!error && data) setSections(data);
   };
 
   const fetchStudentsForExam = async (examId: string) => {
@@ -571,11 +578,14 @@ export default function Results() {
                     </div>
                     <div>
                       <Label>Section *</Label>
-                      <Input
-                        value={newExam.section}
-                        onChange={(e) => setNewExam({ ...newExam, section: e.target.value })}
-                        placeholder="e.g., A"
-                      />
+                      <Select value={newExam.section} onValueChange={(v) => setNewExam({ ...newExam, section: v })}>
+                        <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                        <SelectContent>
+                          {sections.map(s => (
+                            <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label>Year *</Label>
