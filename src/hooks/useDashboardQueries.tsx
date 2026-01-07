@@ -171,12 +171,14 @@ export function useAdminStats() {
         whitelistStudentsRes,
         whitelistFacultyRes,
         whitelistParentsRes,
+        whitelistLibrariansRes,
         attendanceRes,
         leavesRes
       ] = await Promise.all([
         supabase.from("whitelist").select("*", { count: "exact" }).eq("role", "STUDENT"),
         supabase.from("whitelist").select("*", { count: "exact" }).eq("role", "FACULTY"),
         supabase.from("whitelist").select("*", { count: "exact" }).eq("role", "PARENT"),
+        supabase.from("whitelist").select("*", { count: "exact" }).eq("role", "LIBRARIAN"),
         supabase.from("attendance").select("*").eq("date", new Date().toISOString().split("T")[0]),
         supabase.from("leave_requests").select("*", { count: "exact" }).eq("status", "PENDING"),
       ]);
@@ -189,6 +191,7 @@ export function useAdminStats() {
         totalStudents: whitelistStudentsRes.data?.length || 0,
         totalFaculty: whitelistFacultyRes.data?.length || 0,
         totalParents: whitelistParentsRes.data?.length || 0,
+        totalLibrarians: whitelistLibrariansRes.data?.length || 0,
         todayAttendance: presentToday,
         attendanceRate,
         pendingLeaves: leavesRes.data?.length || 0,

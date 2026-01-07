@@ -97,6 +97,74 @@ export type Database = {
           },
         ]
       }
+      book_borrowings: {
+        Row: {
+          book_id: string
+          borrowed_at: string
+          due_date: string
+          id: string
+          issued_by: string | null
+          returned_at: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          book_id: string
+          borrowed_at?: string
+          due_date?: string
+          id?: string
+          issued_by?: string | null
+          returned_at?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          book_id?: string
+          borrowed_at?: string
+          due_date?: string
+          id?: string
+          issued_by?: string | null
+          returned_at?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_borrowings_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      books: {
+        Row: {
+          added_by: string | null
+          code: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           code: string
@@ -661,7 +729,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "ADMIN" | "FACULTY" | "STUDENT" | "PARENT"
+      app_role: "ADMIN" | "FACULTY" | "STUDENT" | "PARENT" | "LIBRARIAN"
       attendance_status: "PRESENT" | "ABSENT" | "LATE"
     }
     CompositeTypes: {
@@ -790,7 +858,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["ADMIN", "FACULTY", "STUDENT", "PARENT"],
+      app_role: ["ADMIN", "FACULTY", "STUDENT", "PARENT", "LIBRARIAN"],
       attendance_status: ["PRESENT", "ABSENT", "LATE"],
     },
   },

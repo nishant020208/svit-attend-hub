@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "STUDENT" | "FACULTY" | "PARENT" | "ADMIN";
+type AppRole = "STUDENT" | "FACULTY" | "PARENT" | "ADMIN" | "LIBRARIAN";
 
 // Developer mode allows authenticated admins to view different role dashboards
 const DEV_VIEW_KEY = "devViewRole";
@@ -11,7 +11,7 @@ const DEV_VIEW_KEY = "devViewRole";
  */
 export function getDevViewRole(): AppRole | null {
   const role = sessionStorage.getItem(DEV_VIEW_KEY);
-  if (role && ["STUDENT", "FACULTY", "PARENT", "ADMIN"].includes(role)) {
+  if (role && ["STUDENT", "FACULTY", "PARENT", "ADMIN", "LIBRARIAN"].includes(role)) {
     return role as AppRole;
   }
   return null;
