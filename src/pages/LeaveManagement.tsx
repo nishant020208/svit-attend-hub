@@ -165,6 +165,13 @@ export default function LeaveManagement() {
 
   const handleUpdateLeaveStatus = async (leaveId: string, status: string, remarks?: string) => {
     try {
+      // Get leave request details first
+      const { data: leaveRequest } = await supabase
+        .from("leave_requests")
+        .select("*")
+        .eq("id", leaveId)
+        .single();
+
       const { error } = await supabase
         .from("leave_requests")
         .update({
@@ -176,9 +183,36 @@ export default function LeaveManagement() {
 
       if (error) throw error;
 
+      // If approved, auto-mark attendance for leave dates
+      if (status === "APPROVED" && leaveRequest) {
+        const startDate = new Date(leaveRequest.start_date);
+        const endDate = new Date(leaveRequest.end_date);
+        
+        // Create attendance records for each day of leave
+        const attendanceRecords = [];
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          attendanceRecords.push({
+            student_id: leaveRequest.student_id,
+            subject: leaveRequest.subject,
+            date: new Date(d).toISOString().split("T")[0],
+            status: "PRESENT" as const,
+            marked_by: user.id,
+          });
+        }
+
+        if (attendanceRecords.length > 0) {
+          await supabase.from("attendance").upsert(attendanceRecords, { 
+            onConflict: "student_id,subject,date",
+            ignoreDuplicates: true 
+          });
+        }
+      }
+
       toast({
         title: "Success",
-        description: `Leave request ${status.toLowerCase()}`,
+        description: status === "APPROVED" 
+          ? "Leave approved and attendance marked for leave dates" 
+          : `Leave request ${status.toLowerCase()}`,
       });
 
       fetchLeaveRequests();
