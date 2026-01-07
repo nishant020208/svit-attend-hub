@@ -5,7 +5,6 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
@@ -30,13 +29,18 @@ export default function AttendanceQR() {
   const [loading, setLoading] = useState(true);
   const [studentId, setStudentId] = useState<string>("");
 
+  // Dropdown data
+  const [courses, setCourses] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [sections, setSections] = useState<string[]>([]);
+
   // QR Generation (Teacher)
   const [qrData, setQrData] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
-  const [subjectCode, setSubjectCode] = useState("");
+  const [selectedSubjectCode, setSelectedSubjectCode] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
 
   // QR Scanning (Student)
@@ -53,6 +57,7 @@ export default function AttendanceQR() {
   useEffect(() => {
     isMountedRef.current = true;
     checkAuth();
+    fetchDropdownData();
     
     return () => {
       isMountedRef.current = false;
@@ -65,6 +70,21 @@ export default function AttendanceQR() {
       fetchStudentData(userId);
     }
   }, [role, roleLoading, userId]);
+
+  const fetchDropdownData = async () => {
+    const [coursesRes, subjectsRes, sectionsRes] = await Promise.all([
+      supabase.from("courses").select("name, code").order("name"),
+      supabase.from("subjects").select("name, code").order("name"),
+      supabase.from("students").select("section").order("section"),
+    ]);
+    
+    setCourses(coursesRes.data || []);
+    setSubjects(subjectsRes.data || []);
+    
+    // Get unique sections
+    const uniqueSections = [...new Set((sectionsRes.data || []).map(s => s.section))].filter(Boolean);
+    setSections(uniqueSections);
+  };
 
   const forceCleanup = async () => {
     if (html5QrCodeRef.current) {
@@ -121,7 +141,7 @@ export default function AttendanceQR() {
   };
 
   const generateQRCode = () => {
-    if (!selectedCourse || !selectedYear || !selectedSection || !selectedSubject || !subjectCode || !selectedDate) {
+    if (!selectedCourse || !selectedYear || !selectedSection || !selectedSubject || !selectedSubjectCode || !selectedDate) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -135,7 +155,7 @@ export default function AttendanceQR() {
       year: selectedYear,
       section: selectedSection,
       subject: selectedSubject,
-      subjectCode: subjectCode,
+      subjectCode: selectedSubjectCode,
       date: format(selectedDate, "yyyy-MM-dd"),
       teacherId: user.id,
       timestamp: Date.now(),
@@ -419,12 +439,18 @@ export default function AttendanceQR() {
               <div className="grid gap-4 md:grid-cols-2 mb-6">
                 <div>
                   <Label htmlFor="course">Course</Label>
-                  <Input
-                    id="course"
-                    placeholder="e.g., B.Tech"
-                    value={selectedCourse}
-                    onChange={(e) => setSelectedCourse(e.target.value)}
-                  />
+                  <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {courses.map((course) => (
+                        <SelectItem key={course.code} value={course.name}>
+                          {course.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="year">Year</Label>
@@ -442,30 +468,41 @@ export default function AttendanceQR() {
                 </div>
                 <div>
                   <Label htmlFor="section">Section</Label>
-                  <Input
-                    id="section"
-                    placeholder="e.g., A"
-                    value={selectedSection}
-                    onChange={(e) => setSelectedSection(e.target.value)}
-                  />
+                  <Select value={selectedSection} onValueChange={setSelectedSection}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select section" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sections.length > 0 ? sections.map((sec) => (
+                        <SelectItem key={sec} value={sec}>{sec}</SelectItem>
+                      )) : (
+                        <>
+                          <SelectItem value="A">A</SelectItem>
+                          <SelectItem value="B">B</SelectItem>
+                          <SelectItem value="C">C</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    placeholder="e.g., Data Structures"
-                    value={selectedSubject}
-                    onChange={(e) => setSelectedSubject(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="subjectCode">Subject Code</Label>
-                  <Input
-                    id="subjectCode"
-                    placeholder="e.g., CS201"
-                    value={subjectCode}
-                    onChange={(e) => setSubjectCode(e.target.value)}
-                  />
+                  <Select value={selectedSubject} onValueChange={(value) => {
+                    setSelectedSubject(value);
+                    const subj = subjects.find(s => s.name === value);
+                    if (subj) setSelectedSubjectCode(subj.code);
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjects.map((subj) => (
+                        <SelectItem key={subj.code} value={subj.name}>
+                          {subj.name} ({subj.code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Date</Label>
