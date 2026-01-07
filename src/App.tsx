@@ -32,6 +32,7 @@ const StudentManagement = lazy(() => import("./pages/StudentManagement"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const Install = lazy(() => import("./pages/Install"));
 const ParentLinks = lazy(() => import("./pages/ParentLinks"));
+const LibraryQR = lazy(() => import("./pages/LibraryQR"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/parent-links" element={<ParentLinks />} />
               <Route path="/about" element={<AboutUs />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/library" element={<LibraryQR />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

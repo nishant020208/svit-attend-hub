@@ -23,7 +23,7 @@ import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 const csvWhitelistSchema = z.object({
   email: z.string().trim().email().max(255),
   name: z.string().trim().min(1).max(100),
-  role: z.enum(["STUDENT", "FACULTY", "PARENT", "ADMIN"]),
+  role: z.enum(["STUDENT", "FACULTY", "PARENT", "ADMIN", "LIBRARIAN"]),
 });
 
 type CSVWhitelistEntry = z.infer<typeof csvWhitelistSchema>;
@@ -707,6 +707,7 @@ export default function Settings() {
                           <SelectItem value="STUDENT">Student</SelectItem>
                           <SelectItem value="FACULTY">Teacher</SelectItem>
                           <SelectItem value="PARENT">Parent</SelectItem>
+                          <SelectItem value="LIBRARIAN">Librarian</SelectItem>
                           <SelectItem value="ADMIN">Admin</SelectItem>
                         </SelectContent>
                       </Select>
@@ -732,7 +733,7 @@ export default function Settings() {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      CSV format: email, name, role (STUDENT/FACULTY/PARENT/ADMIN)
+                      CSV format: email, name, role (STUDENT/FACULTY/PARENT/LIBRARIAN/ADMIN)
                     </p>
                   </div>
                 </CardContent>
