@@ -410,14 +410,21 @@ export default function LibraryQR() {
                 <div className="space-y-3">
                   {borrowings.filter(b => b.status === "BORROWED").map((borrowing) => {
                     const daysRemaining = getDaysRemaining(borrowing.due_date);
+                    const isOverdue = daysRemaining < 0;
+                    const overdueFee = isOverdue ? Math.abs(daysRemaining) * 3 : 0;
                     return (
-                      <div key={borrowing.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div key={borrowing.id} className={`flex items-center justify-between p-3 border rounded-lg ${isOverdue ? 'border-red-300 bg-red-50 dark:bg-red-900/10' : ''}`}>
                         <div>
                           <p className="font-medium">{borrowing.books?.name}</p>
                           <p className="text-sm text-muted-foreground">Due: {format(new Date(borrowing.due_date), "PPP")}</p>
-                          <Badge variant={daysRemaining < 0 ? "destructive" : daysRemaining <= 3 ? "secondary" : "default"}>
-                            {daysRemaining < 0 ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days remaining`}
-                          </Badge>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant={daysRemaining < 0 ? "destructive" : daysRemaining <= 3 ? "secondary" : "default"}>
+                              {daysRemaining < 0 ? `${Math.abs(daysRemaining)} days overdue` : `${daysRemaining} days remaining`}
+                            </Badge>
+                            {isOverdue && (
+                              <span className="text-sm font-bold text-orange-600">₹{overdueFee} fee</span>
+                            )}
+                          </div>
                         </div>
                         <Button size="sm" variant="outline" onClick={() => handleReturnBook(borrowing.id)}>
                           Mark Returned
@@ -488,14 +495,21 @@ export default function LibraryQR() {
                 <div className="space-y-3">
                   {borrowings.filter(b => b.status === "BORROWED").map((borrowing) => {
                     const daysRemaining = getDaysRemaining(borrowing.due_date);
+                    const isOverdue = daysRemaining < 0;
+                    const overdueFee = isOverdue ? Math.abs(daysRemaining) * 3 : 0;
                     return (
-                      <div key={borrowing.id} className="p-4 border rounded-lg">
+                      <div key={borrowing.id} className={`p-4 border rounded-lg ${isOverdue ? 'border-red-300 bg-red-50 dark:bg-red-900/10' : ''}`}>
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="font-semibold">{borrowing.books?.name}</h4>
                             <p className="text-sm text-muted-foreground">Code: {borrowing.books?.code}</p>
                             <p className="text-sm text-muted-foreground">Borrowed: {format(new Date(borrowing.borrowed_at), "PPP")}</p>
                             <p className="text-sm">Due: {format(new Date(borrowing.due_date), "PPP")}</p>
+                            {isOverdue && (
+                              <p className="text-sm font-bold text-red-600 mt-1">
+                                Overdue Fee: ₹{overdueFee} (₹3/day)
+                              </p>
+                            )}
                           </div>
                           <div className="text-right">
                             <Badge variant={daysRemaining < 0 ? "destructive" : daysRemaining <= 3 ? "secondary" : "default"} className="text-lg px-3 py-1">
