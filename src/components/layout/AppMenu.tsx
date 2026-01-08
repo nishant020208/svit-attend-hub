@@ -1,4 +1,4 @@
-import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList } from "lucide-react";
+import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Library } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +45,16 @@ export function AppMenu({ userRole }: AppMenuProps) {
     // Teachers/Faculty and Admin get attendance access
     if (userRole === "FACULTY" || userRole === "ADMIN") {
       items.splice(2, 0, { icon: ClipboardList, label: "Attendance", path: "/attendance" });
+    }
+
+    // Students and Librarians get library access
+    if (userRole === "STUDENT" || userRole === "LIBRARIAN" || userRole === "ADMIN") {
+      items.push({ icon: Library, label: "Library", path: "/library" });
+    }
+
+    // Librarian gets their dashboard link
+    if (userRole === "LIBRARIAN") {
+      items.unshift({ icon: LayoutDashboard, label: "Librarian Dashboard", path: "/librarian-dashboard" });
     }
 
     // Only Admin gets student management

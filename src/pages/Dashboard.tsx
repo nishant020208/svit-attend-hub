@@ -6,10 +6,11 @@ import StudentDashboard from "./StudentDashboard";
 import TeacherDashboard from "./TeacherDashboard";
 import ParentDashboard from "./ParentDashboard";
 import AdminDashboard from "./AdminDashboard";
+import LibrarianDashboard from "./LibrarianDashboard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, User, Users, Shield, Eye, X } from "lucide-react";
+import { GraduationCap, User, Users, Shield, Eye, X, Library } from "lucide-react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -92,6 +93,13 @@ export default function Dashboard() {
                     <Users className="h-3 w-3 sm:mr-1" />
                     <span className="hidden sm:inline">Parent</span>
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="LIBRARIAN" 
+                    className="text-xs data-[state=active]:bg-white data-[state=active]:text-orange-600 text-white/80 h-6 px-2 sm:px-3"
+                  >
+                    <Library className="h-3 w-3 sm:mr-1" />
+                    <span className="hidden sm:inline">Librarian</span>
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
               <Button 
@@ -112,6 +120,7 @@ export default function Dashboard() {
           {devViewRole === "FACULTY" && <TeacherDashboard />}
           {devViewRole === "PARENT" && <ParentDashboard />}
           {devViewRole === "ADMIN" && <AdminDashboard />}
+          {devViewRole === "LIBRARIAN" && <LibrarianDashboard />}
         </div>
       </div>
     );
@@ -127,6 +136,8 @@ export default function Dashboard() {
       return <ParentDashboard />;
     case "ADMIN":
       return <AdminDashboard />;
+    case "LIBRARIAN":
+      return <LibrarianDashboard />;
     default:
       navigate("/auth");
       return null;
