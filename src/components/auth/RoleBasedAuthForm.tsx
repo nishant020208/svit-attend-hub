@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { 
   Loader2, GraduationCap, User, Users, Shield, Cpu, Cog, Zap, CircuitBoard, Sparkles,
   Wifi, Monitor, HardDrive, Database, Server, Radio, Microchip, Binary, Code, Terminal,
-  Laptop, Smartphone, Cable, Power, Battery, Lightbulb, Gauge, Settings, Wrench, BookOpen
+  Laptop, Smartphone, Cable, Power, Battery, Lightbulb, Gauge, Settings, Wrench, BookOpen, Library
 } from "lucide-react";
 import svitLogo from "@/assets/svit-logo-official.jpg";
 import { ForgotPassword } from "./ForgotPassword";
@@ -161,6 +161,13 @@ export function RoleBasedAuthForm() {
       gradient: "from-purple-500 to-pink-500",
       shadow: "shadow-purple-500/25",
     },
+    LIBRARIAN: {
+      icon: Library,
+      title: "Librarian Portal",
+      description: "Manage library books and borrowings",
+      gradient: "from-amber-500 to-orange-500",
+      shadow: "shadow-amber-500/25",
+    },
     ADMIN: {
       icon: Shield,
       title: "Admin Portal",
@@ -264,7 +271,7 @@ export function RoleBasedAuthForm() {
         <CardContent className="space-y-6">
           {/* Role Selection Tabs */}
           <Tabs value={selectedRole} onValueChange={setSelectedRole} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1.5 bg-secondary/50 rounded-xl">
+            <TabsList className="grid w-full grid-cols-5 h-auto p-1.5 bg-secondary/50 rounded-xl">
               {Object.entries(roleConfig).map(([role, config]) => {
                 const Icon = config.icon;
                 return (
