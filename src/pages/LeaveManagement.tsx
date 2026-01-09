@@ -11,10 +11,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Plus, CheckCircle, XCircle, Clock, AlertTriangle, Heart } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
+
+const LEAVE_TYPES = [
+  { value: "regular", label: "Regular Leave", credit: 0, description: "No attendance credit" },
+  { value: "medical", label: "Medical Leave", credit: 10, description: "10% attendance credit" },
+  { value: "critical", label: "Critical/Emergency", credit: 75, description: "75% attendance credit" },
+];
 
 export default function LeaveManagement() {
   const navigate = useNavigate();
@@ -33,6 +39,7 @@ export default function LeaveManagement() {
     reason: "",
     startDate: "",
     endDate: "",
+    leaveType: "regular",
   });
 
   useEffect(() => {
@@ -115,6 +122,13 @@ export default function LeaveManagement() {
     }
   };
 
+  const calculateLeaveDays = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  };
+
   const handleCreateLeave = async () => {
     if (!newLeave.subject || !newLeave.reason || !newLeave.startDate || !newLeave.endDate) {
       toast({
@@ -135,6 +149,9 @@ export default function LeaveManagement() {
     }
 
     try {
+      const leaveTypeInfo = LEAVE_TYPES.find(t => t.value === newLeave.leaveType);
+      const attendanceCredit = leaveTypeInfo?.credit || 0;
+
       const { error } = await supabase
         .from("leave_requests")
         .insert({
@@ -144,6 +161,8 @@ export default function LeaveManagement() {
           start_date: newLeave.startDate,
           end_date: newLeave.endDate,
           status: "PENDING",
+          leave_type: newLeave.leaveType,
+          attendance_credit: attendanceCredit,
         });
 
       if (error) throw error;
@@ -153,7 +172,7 @@ export default function LeaveManagement() {
         description: "Leave request submitted successfully",
       });
 
-      setNewLeave({ subject: "", reason: "", startDate: "", endDate: "" });
+      setNewLeave({ subject: "", reason: "", startDate: "", endDate: "", leaveType: "regular" });
       setDialogOpen(false);
       await fetchLeaveRequests();
     } catch (error: any) {
@@ -185,21 +204,26 @@ export default function LeaveManagement() {
 
       if (error) throw error;
 
-      // If approved, auto-mark attendance for leave dates
+      // If approved, mark attendance based on leave type
       if (status === "APPROVED" && leaveRequest) {
         const startDate = new Date(leaveRequest.start_date);
         const endDate = new Date(leaveRequest.end_date);
-        
+        const attendanceCredit = leaveRequest.attendance_credit || 0;
+        const leaveType = leaveRequest.leave_type || "regular";
+
         // Create attendance records for each day of leave
         const attendanceRecords = [];
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-          attendanceRecords.push({
-            student_id: leaveRequest.student_id,
-            subject: leaveRequest.subject,
-            date: new Date(d).toISOString().split("T")[0],
-            status: "PRESENT" as const,
-            marked_by: user.id,
-          });
+          // Only mark as present if there's attendance credit
+          if (attendanceCredit > 0) {
+            attendanceRecords.push({
+              student_id: leaveRequest.student_id,
+              subject: leaveRequest.subject,
+              date: new Date(d).toISOString().split("T")[0],
+              status: "PRESENT" as const,
+              marked_by: user.id,
+            });
+          }
         }
 
         if (attendanceRecords.length > 0) {
@@ -208,14 +232,22 @@ export default function LeaveManagement() {
             ignoreDuplicates: true 
           });
         }
-      }
 
-      toast({
-        title: "Success",
-        description: status === "APPROVED" 
-          ? "Leave approved and attendance marked for leave dates" 
-          : `Leave request ${status.toLowerCase()}`,
-      });
+        let message = `Leave approved for ${leaveType} leave.`;
+        if (attendanceCredit > 0) {
+          message += ` ${attendanceCredit}% attendance credit applied.`;
+        }
+
+        toast({
+          title: "Success",
+          description: message,
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `Leave request ${status.toLowerCase()}`,
+        });
+      }
 
       fetchLeaveRequests();
     } catch (error: any) {
@@ -242,6 +274,26 @@ export default function LeaveManagement() {
         {status}
       </Badge>
     );
+  };
+
+  const getLeaveTypeBadge = (leaveType: string, credit: number) => {
+    if (leaveType === "medical") {
+      return (
+        <Badge variant="outline" className="flex items-center gap-1 border-blue-500 text-blue-600">
+          <Heart className="h-3 w-3" />
+          Medical ({credit}%)
+        </Badge>
+      );
+    }
+    if (leaveType === "critical") {
+      return (
+        <Badge variant="outline" className="flex items-center gap-1 border-red-500 text-red-600">
+          <AlertTriangle className="h-3 w-3" />
+          Critical ({credit}%)
+        </Badge>
+      );
+    }
+    return <Badge variant="outline">Regular</Badge>;
   };
 
   if (loading || roleLoading) {
@@ -274,6 +326,27 @@ export default function LeaveManagement() {
                   <DialogDescription>Fill in the details for your leave request</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="leaveType">Leave Type</Label>
+                    <Select value={newLeave.leaveType} onValueChange={(value) => setNewLeave({ ...newLeave, leaveType: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LEAVE_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            <div className="flex flex-col">
+                              <span>{type.label}</span>
+                              <span className="text-xs text-muted-foreground">{type.description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {LEAVE_TYPES.find(t => t.value === newLeave.leaveType)?.description}
+                    </p>
+                  </div>
                   <div>
                     <Label htmlFor="subject">Subject</Label>
                     <Select value={newLeave.subject} onValueChange={(value) => setNewLeave({ ...newLeave, subject: value })}>
@@ -319,13 +392,25 @@ export default function LeaveManagement() {
                       />
                     </div>
                   </div>
-                <Button onClick={handleCreateLeave} className="w-full gradient-primary">
-                  Submit Request
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+                  {newLeave.startDate && newLeave.endDate && (
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm">
+                        <span className="font-medium">Duration:</span> {calculateLeaveDays(newLeave.startDate, newLeave.endDate)} day(s)
+                      </p>
+                      {newLeave.leaveType !== "regular" && (
+                        <p className="text-sm text-primary">
+                          <span className="font-medium">Attendance Credit:</span> {LEAVE_TYPES.find(t => t.value === newLeave.leaveType)?.credit}% of leave days
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <Button onClick={handleCreateLeave} className="w-full gradient-primary">
+                    Submit Request
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -343,9 +428,11 @@ export default function LeaveManagement() {
                         </>
                       )}
                       {new Date(request.start_date).toLocaleDateString()} - {new Date(request.end_date).toLocaleDateString()}
+                      {" "}({calculateLeaveDays(request.start_date, request.end_date)} days)
                     </CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {getLeaveTypeBadge(request.leave_type || "regular", request.attendance_credit || 0)}
                     {getStatusBadge(request.status)}
                   </div>
                 </div>
