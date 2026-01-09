@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Download, TrendingDown, TrendingUp, AlertTriangle, Brain, Users, Calendar, Target } from "lucide-react";
+import { Download, TrendingDown, TrendingUp, AlertTriangle, Brain, Users, Calendar, Target, GraduationCap, BookOpen, PenSquare } from "lucide-react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 
 export default function Reports() {
@@ -26,6 +27,10 @@ export default function Reports() {
   const [predictingStudent, setPredictingStudent] = useState<string | null>(null);
   const [attendanceTrends, setAttendanceTrends] = useState<any[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<any>(null);
+  const [resultsData, setResultsData] = useState<any[]>([]);
+  const [homeworkData, setHomeworkData] = useState<any[]>([]);
+  const [resultsMetrics, setResultsMetrics] = useState<any>(null);
+  const [homeworkMetrics, setHomeworkMetrics] = useState<any>(null);
 
   useEffect(() => {
     checkAuth();
@@ -51,9 +56,17 @@ export default function Reports() {
       setProfile(profileData);
 
       if (role === "ADMIN" || role === "FACULTY") {
-        await fetchAnalyticsData();
+        await Promise.all([
+          fetchAnalyticsData(),
+          fetchResultsData(),
+          fetchHomeworkData()
+        ]);
       } else if (role === "STUDENT") {
-        await fetchStudentData(session.user.id);
+        await Promise.all([
+          fetchStudentData(session.user.id),
+          fetchStudentResults(session.user.id),
+          fetchStudentHomework(session.user.id)
+        ]);
       } else if (role === "PARENT") {
         await fetchParentData(session.user.id);
       }
@@ -140,6 +153,157 @@ export default function Reports() {
     } catch (error) {
       console.error("Error fetching analytics:", error);
       toast.error("Failed to load analytics data");
+    }
+  };
+
+  const fetchResultsData = async () => {
+    try {
+      const { data: results, error } = await supabase
+        .from("results")
+        .select(`*, exams (name, subject, course, section, year), students (roll_number, profiles:user_id (name))`);
+
+      if (error) throw error;
+
+      setResultsData(results || []);
+
+      // Calculate results metrics
+      const totalResults = results?.length || 0;
+      const passedCount = results?.filter(r => r.grade !== "FF").length || 0;
+      const avgPercentage = totalResults > 0 
+        ? results.reduce((sum, r) => sum + (r.percentage || 0), 0) / totalResults 
+        : 0;
+
+      // Grade distribution
+      const gradeDistribution = {
+        AA: results?.filter(r => r.grade === "AA").length || 0,
+        AB: results?.filter(r => r.grade === "AB").length || 0,
+        BB: results?.filter(r => r.grade === "BB").length || 0,
+        BC: results?.filter(r => r.grade === "BC").length || 0,
+        CC: results?.filter(r => r.grade === "CC").length || 0,
+        CD: results?.filter(r => r.grade === "CD").length || 0,
+        DD: results?.filter(r => r.grade === "DD").length || 0,
+        FF: results?.filter(r => r.grade === "FF").length || 0,
+      };
+
+      setResultsMetrics({
+        totalResults,
+        passedCount,
+        failedCount: totalResults - passedCount,
+        avgPercentage: avgPercentage.toFixed(2),
+        passRate: totalResults > 0 ? ((passedCount / totalResults) * 100).toFixed(1) : 0,
+        gradeDistribution
+      });
+
+    } catch (error) {
+      console.error("Error fetching results:", error);
+    }
+  };
+
+  const fetchHomeworkData = async () => {
+    try {
+      const { data: homework, error: hwError } = await supabase
+        .from("homework")
+        .select(`*, profiles:teacher_id (name)`);
+
+      const { data: submissions, error: subError } = await supabase
+        .from("homework_submissions")
+        .select(`*, students (roll_number, profiles:user_id (name))`);
+
+      if (hwError) throw hwError;
+
+      setHomeworkData(homework || []);
+
+      // Calculate homework metrics
+      const totalHomework = homework?.length || 0;
+      const totalSubmissions = submissions?.length || 0;
+      const gradedSubmissions = submissions?.filter(s => s.grade).length || 0;
+      const pendingSubmissions = submissions?.filter(s => s.status === "pending").length || 0;
+
+      // Submission by type
+      const typeDistribution = {
+        assignment: homework?.filter(h => h.homework_type === "assignment").length || 0,
+        project: homework?.filter(h => h.homework_type === "project").length || 0,
+        practical: homework?.filter(h => h.homework_type === "practical").length || 0,
+        quiz: homework?.filter(h => h.homework_type === "quiz").length || 0,
+      };
+
+      setHomeworkMetrics({
+        totalHomework,
+        totalSubmissions,
+        gradedSubmissions,
+        pendingSubmissions,
+        typeDistribution
+      });
+
+    } catch (error) {
+      console.error("Error fetching homework:", error);
+    }
+  };
+
+  const fetchStudentResults = async (userId: string) => {
+    try {
+      const { data: studentData } = await supabase
+        .from("students")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+
+      if (!studentData) return;
+
+      const { data: results } = await supabase
+        .from("results")
+        .select(`*, exams (name, subject)`)
+        .eq("student_id", studentData.id);
+
+      setResultsData(results || []);
+
+      // Calculate student's result metrics
+      const totalResults = results?.length || 0;
+      const passedCount = results?.filter(r => r.grade !== "FF").length || 0;
+      const avgPercentage = totalResults > 0 
+        ? results.reduce((sum, r) => sum + (r.percentage || 0), 0) / totalResults 
+        : 0;
+
+      setResultsMetrics({
+        totalResults,
+        passedCount,
+        failedCount: totalResults - passedCount,
+        avgPercentage: avgPercentage.toFixed(2),
+        passRate: totalResults > 0 ? ((passedCount / totalResults) * 100).toFixed(1) : 0
+      });
+    } catch (error) {
+      console.error("Error fetching student results:", error);
+    }
+  };
+
+  const fetchStudentHomework = async (userId: string) => {
+    try {
+      const { data: studentData } = await supabase
+        .from("students")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+
+      if (!studentData) return;
+
+      const { data: submissions } = await supabase
+        .from("homework_submissions")
+        .select(`*, homework (title, homework_type, subject)`)
+        .eq("student_id", studentData.id);
+
+      setHomeworkData(submissions || []);
+
+      const totalSubmissions = submissions?.length || 0;
+      const gradedSubmissions = submissions?.filter(s => s.grade).length || 0;
+      const pendingSubmissions = submissions?.filter(s => s.status === "pending").length || 0;
+
+      setHomeworkMetrics({
+        totalSubmissions,
+        gradedSubmissions,
+        pendingSubmissions
+      });
+    } catch (error) {
+      console.error("Error fetching student homework:", error);
     }
   };
 
@@ -331,240 +495,402 @@ export default function Reports() {
         </div>
 
         {/* Admin/Faculty View */}
-        {(role === "ADMIN" || role === "FACULTY") && performanceMetrics && (
-          <>
-            {/* Overview Cards */}
-            <div className="grid gap-6 md:grid-cols-4">
-              <Card className="hover-lift">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{performanceMetrics.totalStudents}</div>
-                </CardContent>
-              </Card>
+        {(role === "ADMIN" || role === "FACULTY") && (
+          <Tabs defaultValue="attendance" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-secondary/50">
+              <TabsTrigger value="attendance" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
+                <Calendar className="h-4 w-4" />
+                Attendance
+              </TabsTrigger>
+              <TabsTrigger value="results" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
+                <GraduationCap className="h-4 w-4" />
+                Results
+              </TabsTrigger>
+              <TabsTrigger value="homework" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2">
+                <PenSquare className="h-4 w-4" />
+                Homework
+              </TabsTrigger>
+            </TabsList>
 
-              <Card className="hover-lift">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Avg Attendance</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">{performanceMetrics.averageAttendance}%</div>
-                  <p className="text-xs text-muted-foreground mt-1">Overall average</p>
-                </CardContent>
-              </Card>
+            {/* Attendance Tab */}
+            <TabsContent value="attendance" className="space-y-6">
+              {performanceMetrics && (
+                <>
+                  {/* Overview Cards */}
+                  <div className="grid gap-6 md:grid-cols-4">
+                    <Card className="hover-lift">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{performanceMetrics.totalStudents}</div>
+                      </CardContent>
+                    </Card>
 
-              <Card className="hover-lift border-destructive/50">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">High Risk</CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-destructive" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-destructive">{performanceMetrics.highRiskStudents}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Below 75% attendance</p>
-                </CardContent>
-              </Card>
+                    <Card className="hover-lift">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Avg Attendance</CardTitle>
+                        <Target className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{performanceMetrics.averageAttendance}%</div>
+                        <p className="text-xs text-muted-foreground mt-1">Overall average</p>
+                      </CardContent>
+                    </Card>
 
-              <Card className="hover-lift border-yellow-500/50">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Medium Risk</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-yellow-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-yellow-600">{performanceMetrics.mediumRiskStudents}</div>
-                  <p className="text-xs text-muted-foreground mt-1">75-85% attendance</p>
-                </CardContent>
-              </Card>
-            </div>
+                    <Card className="hover-lift border-destructive/50">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">High Risk</CardTitle>
+                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-destructive">{performanceMetrics.highRiskStudents}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Below 75% attendance</p>
+                      </CardContent>
+                    </Card>
 
-            {/* Charts */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="hover-lift">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Attendance Trends (30 Days)
-                  </CardTitle>
-                  <CardDescription>Daily attendance percentage</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={attendanceTrends}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" stroke="hsl(var(--foreground))" fontSize={12} />
-                      <YAxis stroke="hsl(var(--foreground))" fontSize={12} />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: "hsl(var(--card))", 
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px"
-                        }}
-                      />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="attendance" 
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth={2}
-                        name="Attendance %"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-lift">
-                <CardHeader>
-                  <CardTitle>Risk Distribution</CardTitle>
-                  <CardDescription>Students by risk category</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Student List with AI Predictions */}
-            <Card className="hover-lift">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5 text-primary" />
-                  AI Performance Analysis
-                </CardTitle>
-                <CardDescription>Select a student to generate AI-powered predictions</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Select value={selectedStudent} onValueChange={(value) => {
-                  setSelectedStudent(value);
-                  setAiPrediction(null);
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select student..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    {studentsData.map(student => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.profiles?.name} - {student.roll_number} ({student.attendancePercentage}%)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {selectedStudent && (
-                  <div className="space-y-4">
-                    {studentsData.filter(s => s.id === selectedStudent).map(student => (
-                      <div key={student.id} className="p-4 rounded-lg bg-muted/50 space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold text-lg">{student.profiles?.name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {student.course} • Year {student.year} • Section {student.section}
-                            </p>
-                          </div>
-                          <Badge variant={getRiskColor(student.riskLevel) as any}>
-                            {student.riskLevel} RISK
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-muted-foreground">Total Classes</p>
-                            <p className="font-bold">{student.totalClasses}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Present</p>
-                            <p className="font-bold text-green-600">{student.presentCount}</p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground">Attendance</p>
-                            <p className="font-bold">{student.attendancePercentage}%</p>
-                          </div>
-                        </div>
-                        <Button 
-                          onClick={() => predictStudentPerformance(student.id)}
-                          disabled={predictingStudent === student.id}
-                          className="w-full gap-2"
-                        >
-                          <Brain className="h-4 w-4" />
-                          {predictingStudent === student.id ? "Analyzing..." : "Generate AI Prediction"}
-                        </Button>
-                      </div>
-                    ))}
-
-                    {aiPrediction && (
-                      <Alert className="border-primary">
-                        <Brain className="h-4 w-4" />
-                        <AlertDescription className="space-y-3 mt-2">
-                          <div>
-                            <h4 className="font-semibold mb-2">AI Analysis Results</h4>
-                            <div className="space-y-2">
-                              <div>
-                                <Badge variant={getRiskColor(aiPrediction.riskLevel) as any}>
-                                  {aiPrediction.riskLevel} RISK
-                                </Badge>
-                              </div>
-                              
-                              {aiPrediction.issues && (
-                                <div>
-                                  <p className="font-medium text-sm">Key Issues:</p>
-                                  <ul className="list-disc list-inside text-sm text-muted-foreground">
-                                    {Array.isArray(aiPrediction.issues) ? 
-                                      aiPrediction.issues.map((issue: string, i: number) => (
-                                        <li key={i}>{issue}</li>
-                                      )) : <li>{aiPrediction.issues}</li>
-                                    }
-                                  </ul>
-                                </div>
-                              )}
-                              
-                              {aiPrediction.recommendations && (
-                                <div>
-                                  <p className="font-medium text-sm">Recommendations:</p>
-                                  <ul className="list-disc list-inside text-sm text-muted-foreground">
-                                    {Array.isArray(aiPrediction.recommendations) ? 
-                                      aiPrediction.recommendations.map((rec: string, i: number) => (
-                                        <li key={i}>{rec}</li>
-                                      )) : <li>{aiPrediction.recommendations}</li>
-                                    }
-                                  </ul>
-                                </div>
-                              )}
-                              
-                              {aiPrediction.mentorFeedback && (
-                                <div className="mt-3 p-3 bg-muted rounded-lg">
-                                  <p className="font-medium text-sm mb-1">Mentor Feedback:</p>
-                                  <p className="text-sm">{aiPrediction.mentorFeedback}</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </AlertDescription>
-                      </Alert>
-                    )}
+                    <Card className="hover-lift border-yellow-500/50">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Medium Risk</CardTitle>
+                        <TrendingDown className="h-4 w-4 text-yellow-600" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-yellow-600">{performanceMetrics.mediumRiskStudents}</div>
+                        <p className="text-xs text-muted-foreground mt-1">75-85% attendance</p>
+                      </CardContent>
+                    </Card>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </>
+
+                  {/* Charts */}
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <Card className="hover-lift">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Calendar className="h-5 w-5" />
+                          Attendance Trends (30 Days)
+                        </CardTitle>
+                        <CardDescription>Daily attendance percentage</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <LineChart data={attendanceTrends}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="date" stroke="hsl(var(--foreground))" fontSize={12} />
+                            <YAxis stroke="hsl(var(--foreground))" fontSize={12} />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: "hsl(var(--card))", 
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px"
+                              }}
+                            />
+                            <Legend />
+                            <Line 
+                              type="monotone" 
+                              dataKey="attendance" 
+                              stroke="hsl(var(--primary))" 
+                              strokeWidth={2}
+                              name="Attendance %"
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover-lift">
+                      <CardHeader>
+                        <CardTitle>Risk Distribution</CardTitle>
+                        <CardDescription>Students by risk category</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={pieData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                              outerRadius={100}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {pieData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </>
+              )}
+            </TabsContent>
+
+            {/* Results Tab */}
+            <TabsContent value="results" className="space-y-6">
+              {resultsMetrics && (
+                <>
+                  <div className="grid gap-6 md:grid-cols-4">
+                    <Card className="hover-lift">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Total Results</CardTitle>
+                        <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{resultsMetrics.totalResults}</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover-lift border-green-500/50">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Passed</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-green-600">{resultsMetrics.passedCount}</div>
+                        <p className="text-xs text-muted-foreground mt-1">{resultsMetrics.passRate}% pass rate</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover-lift border-destructive/50">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Failed</CardTitle>
+                        <TrendingDown className="h-4 w-4 text-destructive" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-destructive">{resultsMetrics.failedCount}</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover-lift">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Avg Percentage</CardTitle>
+                        <Target className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-primary">{resultsMetrics.avgPercentage}%</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Grade Distribution Chart */}
+                  {resultsMetrics.gradeDistribution && (
+                    <Card className="hover-lift">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <GraduationCap className="h-5 w-5" />
+                          Grade Distribution
+                        </CardTitle>
+                        <CardDescription>Student performance by grade</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={Object.entries(resultsMetrics.gradeDistribution).map(([grade, count]) => ({ grade, count }))}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="grade" stroke="hsl(var(--foreground))" fontSize={12} />
+                            <YAxis stroke="hsl(var(--foreground))" fontSize={12} />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: "hsl(var(--card))", 
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px"
+                              }}
+                            />
+                            <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Students" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </TabsContent>
+
+            {/* Homework Tab */}
+            <TabsContent value="homework" className="space-y-6">
+              {homeworkMetrics && (
+                <>
+                  <div className="grid gap-6 md:grid-cols-4">
+                    <Card className="hover-lift">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Total Homework</CardTitle>
+                        <PenSquare className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{homeworkMetrics.totalHomework}</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover-lift">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
+                        <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{homeworkMetrics.totalSubmissions}</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover-lift border-green-500/50">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Graded</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-green-600">{homeworkMetrics.gradedSubmissions}</div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover-lift border-yellow-500/50">
+                      <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+                        <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-yellow-600">{homeworkMetrics.pendingSubmissions}</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Homework Type Distribution */}
+                  {homeworkMetrics.typeDistribution && (
+                    <Card className="hover-lift">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <PenSquare className="h-5 w-5" />
+                          Homework by Type
+                        </CardTitle>
+                        <CardDescription>Distribution of homework types</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={[
+                            { type: "Assignment", count: homeworkMetrics.typeDistribution.assignment },
+                            { type: "Project", count: homeworkMetrics.typeDistribution.project },
+                            { type: "Practical", count: homeworkMetrics.typeDistribution.practical },
+                            { type: "Quiz", count: homeworkMetrics.typeDistribution.quiz },
+                          ]}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="type" stroke="hsl(var(--foreground))" fontSize={12} />
+                            <YAxis stroke="hsl(var(--foreground))" fontSize={12} />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: "hsl(var(--card))", 
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px"
+                              }}
+                            />
+                            <Bar dataKey="count" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} name="Count" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
+
+        {/* AI Performance Analysis - for Admin/Faculty */}
+        {(role === "ADMIN" || role === "FACULTY") && studentsData.length > 0 && (
+          <Card className="hover-lift">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-primary" />
+                AI Performance Analysis
+              </CardTitle>
+              <CardDescription>Select a student to generate AI-powered predictions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Select value={selectedStudent} onValueChange={(value) => {
+                setSelectedStudent(value);
+                setAiPrediction(null);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select student..." />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  {studentsData.map(student => (
+                    <SelectItem key={student.id} value={student.id}>
+                      {student.profiles?.name} - {student.roll_number} ({student.attendancePercentage}%)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {selectedStudent && (
+                <div className="space-y-4">
+                  {studentsData.filter(s => s.id === selectedStudent).map(student => (
+                    <div key={student.id} className="p-4 rounded-lg bg-muted/50 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-lg">{student.profiles?.name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {student.course} • Year {student.year} • Section {student.section}
+                          </p>
+                        </div>
+                        <Badge variant={getRiskColor(student.riskLevel) as any}>
+                          {student.riskLevel} RISK
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Total Classes</p>
+                          <p className="font-bold">{student.totalClasses}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Present</p>
+                          <p className="font-bold text-green-600">{student.presentCount}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Attendance</p>
+                          <p className="font-bold">{student.attendancePercentage}%</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => predictStudentPerformance(student.id)}
+                        disabled={predictingStudent === student.id}
+                        className="w-full gap-2"
+                      >
+                        <Brain className="h-4 w-4" />
+                        {predictingStudent === student.id ? "Analyzing..." : "Generate AI Prediction"}
+                      </Button>
+                    </div>
+                  ))}
+
+                  {aiPrediction && (
+                    <Alert className="border-primary">
+                      <Brain className="h-4 w-4" />
+                      <AlertDescription className="space-y-3 mt-2">
+                        <div>
+                          <h4 className="font-semibold mb-2">AI Analysis Results</h4>
+                          <div className="space-y-2">
+                            <div>
+                              <Badge variant={getRiskColor(aiPrediction.riskLevel) as any}>
+                                {aiPrediction.riskLevel} RISK
+                              </Badge>
+                            </div>
+                            
+                            {aiPrediction.mentorFeedback && (
+                              <div className="mt-3 p-3 bg-muted rounded-lg">
+                                <p className="font-medium text-sm mb-1">AI Mentor Feedback:</p>
+                                <p className="text-sm whitespace-pre-wrap">{aiPrediction.mentorFeedback}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Student/Parent View */}
