@@ -283,6 +283,15 @@ export default function Settings() {
 
   const handleRemoveFromWhitelist = async (id: string) => {
     try {
+      // Get email before deleting so we can revoke access too
+      const { data: entry, error: entryError } = await supabase
+        .from("whitelist")
+        .select("email")
+        .eq("id", id)
+        .single();
+
+      if (entryError) throw entryError;
+
       const { error } = await supabase
         .from("whitelist")
         .delete()
@@ -290,12 +299,30 @@ export default function Settings() {
 
       if (error) throw error;
 
+      // Revoke access for already-registered users by removing their roles
+      const email = (entry.email || "").toLowerCase();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("email", email)
+        .maybeSingle();
+
+      if (profile?.id) {
+        const { error: roleDeleteError } = await (supabase as any)
+          .from("user_roles")
+          .delete()
+          .eq("user_id", profile.id);
+
+        if (roleDeleteError) throw roleDeleteError;
+      }
+
       toast({
         title: "Success",
-        description: "User removed from whitelist",
+        description: "User removed from whitelist and access revoked",
       });
 
       fetchWhitelist();
+      fetchRegisteredUsers();
     } catch (error: any) {
       toast({
         title: "Error",

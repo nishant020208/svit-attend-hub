@@ -46,27 +46,6 @@ export function AuthForm() {
   const handleLogin = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      // Check if email is whitelisted before attempting login
-      const { data: whitelistData, error: whitelistError } = await supabase
-        .from("whitelist")
-        .select("email, role")
-        .eq("email", data.email.toLowerCase())
-        .maybeSingle();
-
-      if (whitelistError) {
-        console.error("Whitelist check error:", whitelistError);
-      }
-
-      if (!whitelistData) {
-        toast({
-          title: "Access Denied",
-          description: "Your email is not whitelisted. Please contact the administrator for access.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
       const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -85,7 +64,7 @@ export function AuthForm() {
         });
         navigate("/dashboard");
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Error",
         description: "An unexpected error occurred",

@@ -30,6 +30,17 @@ export default function Dashboard() {
     checkAuth();
   }, [navigate]);
 
+  // If a user can authenticate but has no assigned role, force sign-out.
+  // This is what makes "removed from whitelist" actually block access after removal.
+  useEffect(() => {
+    if (loading) return;
+    if (!role) {
+      supabase.auth.signOut().finally(() => {
+        navigate("/auth", { replace: true });
+      });
+    }
+  }, [loading, role, navigate]);
+
   const handleDevViewChange = (newRole: string) => {
     setDevViewRole(newRole as any);
     setDevViewRoleState(newRole);
