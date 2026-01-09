@@ -89,14 +89,16 @@ Attendance Data:
 - Attendance Percentage: ${attendancePercentage.toFixed(2)}%
 - Recent Trend: ${attendanceData.slice(0, 10).map((a: any) => a.status).join(', ')}
 
-Analyze this student's performance and provide:
-1. Risk Level (LOW/MEDIUM/HIGH)
-2. Key Issues identified
-3. Specific actionable recommendations
-4. Mentor feedback message
-5. Predicted outcome if current trend continues
+Analyze this student's performance and provide your analysis in plain text format (NOT JSON):
 
-Format as JSON with keys: riskLevel, issues, recommendations, mentorFeedback, prediction
+Write a brief analysis covering:
+1. Their risk level (mention if LOW, MEDIUM, or HIGH)
+2. Key issues you've identified
+3. Specific actionable recommendations
+4. A supportive mentor feedback message
+5. Your prediction of the outcome if current trend continues
+
+Write naturally in paragraphs or bullet points - do not use JSON format.
 `;
 
     console.log('Making AI prediction request for user:', user.id, 'with role:', roleData.role);
@@ -112,7 +114,7 @@ Format as JSON with keys: riskLevel, issues, recommendations, mentorFeedback, pr
         messages: [
           {
             role: 'system',
-            content: 'You are an educational analytics AI that predicts student performance and provides actionable insights. Always respond with valid JSON only.'
+            content: 'You are an educational analytics AI that predicts student performance and provides actionable insights. Always respond in plain text format with bullet points and paragraphs - never use JSON. Write like a caring mentor would.'
           },
           {
             role: 'user',
@@ -143,20 +145,8 @@ Format as JSON with keys: riskLevel, issues, recommendations, mentorFeedback, pr
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
 
-    // Parse AI response
-    let analysis;
-    try {
-      analysis = JSON.parse(aiResponse);
-    } catch {
-      // Fallback if AI doesn't return valid JSON
-      analysis = {
-        riskLevel: attendancePercentage < 75 ? 'HIGH' : attendancePercentage < 85 ? 'MEDIUM' : 'LOW',
-        issues: [`Low attendance: ${attendancePercentage.toFixed(2)}%`],
-        recommendations: ['Improve attendance', 'Meet with faculty advisor'],
-        mentorFeedback: aiResponse,
-        prediction: 'Needs improvement'
-      };
-    }
+    // Determine risk level based on attendance
+    const riskLevel = attendancePercentage < 75 ? 'HIGH' : attendancePercentage < 85 ? 'MEDIUM' : 'LOW';
 
     console.log('AI prediction completed successfully');
 
@@ -164,7 +154,8 @@ Format as JSON with keys: riskLevel, issues, recommendations, mentorFeedback, pr
       JSON.stringify({
         success: true,
         attendancePercentage: attendancePercentage.toFixed(2),
-        ...analysis
+        riskLevel: riskLevel,
+        mentorFeedback: aiResponse
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
