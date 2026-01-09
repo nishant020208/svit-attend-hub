@@ -38,13 +38,13 @@ const signupSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
 
-// Engineering-themed floating decorations
+// Engineering-themed floating decorations - more subtle opacity
 const FloatingIcon = ({ icon: Icon, className, delay = "0s" }: { icon: any; className: string; delay?: string }) => (
   <div 
-    className={`absolute opacity-10 animate-float ${className}`}
+    className={`absolute opacity-[0.06] ${className}`}
     style={{ animationDelay: delay }}
   >
-    <Icon className="w-full h-full text-primary" />
+    <Icon className="w-full h-full text-slate-400" />
   </div>
 );
 
@@ -144,36 +144,36 @@ export function RoleBasedAuthForm() {
       icon: GraduationCap,
       title: "Student Portal",
       description: "Access your courses, attendance, and grades",
-      gradient: "from-blue-500 to-cyan-500",
-      shadow: "shadow-blue-500/25",
+      gradient: "from-blue-500 to-blue-600",
+      shadow: "shadow-blue-500/20",
     },
     FACULTY: {
       icon: User,
       title: "Faculty Portal",
       description: "Manage classes, mark attendance, and grade students",
-      gradient: "from-emerald-500 to-teal-500",
-      shadow: "shadow-emerald-500/25",
+      gradient: "from-emerald-500 to-emerald-600",
+      shadow: "shadow-emerald-500/20",
     },
     PARENT: {
       icon: Users,
       title: "Parent Portal",
       description: "Monitor your child's academic progress",
-      gradient: "from-purple-500 to-pink-500",
-      shadow: "shadow-purple-500/25",
+      gradient: "from-violet-500 to-violet-600",
+      shadow: "shadow-violet-500/20",
     },
     LIBRARIAN: {
       icon: Library,
       title: "Librarian Portal",
       description: "Manage library books and borrowings",
-      gradient: "from-amber-500 to-orange-500",
-      shadow: "shadow-amber-500/25",
+      gradient: "from-amber-500 to-amber-600",
+      shadow: "shadow-amber-500/20",
     },
     ADMIN: {
       icon: Shield,
       title: "Admin Portal",
       description: "Manage system settings and users",
-      gradient: "from-orange-500 to-red-500",
-      shadow: "shadow-orange-500/25",
+      gradient: "from-rose-500 to-rose-600",
+      shadow: "shadow-rose-500/20",
     },
   };
 
@@ -181,14 +181,14 @@ export function RoleBasedAuthForm() {
   const RoleIcon = currentRoleConfig.icon;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Animated Grid Background */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black_40%,transparent_100%)]" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800">
+      {/* Subtle Grid Background */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(100,116,139,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(100,116,139,0.05)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black_40%,transparent_100%)]" />
       
-      {/* Glowing Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-3xl" />
+      {/* Soft Glowing Orbs - more subtle, less AI-like */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-slate-400/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-3xl" />
       
       {/* Engineering & Electronics Floating Icons - Left Side */}
       <FloatingIcon icon={Cpu} className="w-16 h-16 top-[8%] left-[8%]" delay="0s" />

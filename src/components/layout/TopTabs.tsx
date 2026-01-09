@@ -51,15 +51,22 @@ export function TopTabs({ userEmail, userName, userRole }: TopTabsProps) {
   const { isAdmin } = useUserRole();
 
   const handleLogout = async () => {
-    clearDevViewRole();
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive"
-      });
-    } else {
+    try {
+      clearDevViewRole();
+      // Clear any local storage
+      localStorage.removeItem('sb-eizajitmzuytpaziqdkk-auth-token');
+      
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      
+      // Always navigate to auth, even if there's an error
+      // since we've already cleared local state
+      navigate("/auth");
+      
+      if (error) {
+        console.warn("Logout warning:", error.message);
+      }
+    } catch (err) {
+      // Still navigate even on exception
       navigate("/auth");
     }
   };
@@ -78,8 +85,8 @@ export function TopTabs({ userEmail, userName, userRole }: TopTabsProps) {
   return (
     <>
       {/* Desktop/Tablet Header */}
-      <header className="sticky top-0 z-50 w-full border-b shadow-lg bg-gradient-primary">
-        <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 bg-blue-700">
+      <header className="sticky top-0 z-50 w-full border-b shadow-md bg-primary">
+        <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4">
           {/* Logo and Brand with Menu Popup */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
