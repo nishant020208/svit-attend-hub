@@ -527,7 +527,7 @@ export default function Results() {
                 Result & Grading System
               </h1>
             </div>
-            <p className="text-muted-foreground text-sm">SVIT ERP • GTU Grading Pattern</p>
+            <p className="text-muted-foreground text-sm">SVIT ERP • Midsem Marks Configuration</p>
           </div>
           
           {isAdminOrFaculty && (
