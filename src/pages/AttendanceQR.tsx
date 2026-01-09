@@ -140,6 +140,61 @@ export default function AttendanceQR() {
     }
   };
 
+  // Dynamic QR code state
+  const [qrToken, setQrToken] = useState<string>("");
+  const [qrExpiresAt, setQrExpiresAt] = useState<number>(0);
+  const [qrCountdown, setQrCountdown] = useState<number>(20);
+  const qrIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const generateQRToken = useCallback(() => {
+    // Generate unique token for this QR code
+    const token = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+    const expiresAt = Date.now() + 20000; // 20 seconds
+    setQrToken(token);
+    setQrExpiresAt(expiresAt);
+    setQrCountdown(20);
+
+    const qrPayload = {
+      course: selectedCourse,
+      year: selectedYear,
+      section: selectedSection,
+      subject: selectedSubject,
+      subjectCode: selectedSubjectCode,
+      date: format(selectedDate!, "yyyy-MM-dd"),
+      teacherId: user.id,
+      token: token,
+      expiresAt: expiresAt,
+    };
+
+    setQrData(JSON.stringify(qrPayload));
+  }, [selectedCourse, selectedYear, selectedSection, selectedSubject, selectedSubjectCode, selectedDate, user?.id]);
+
+  // Effect to auto-regenerate QR every 20 seconds
+  useEffect(() => {
+    if (qrData && qrExpiresAt > 0) {
+      // Countdown timer
+      const countdownInterval = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((qrExpiresAt - Date.now()) / 1000));
+        setQrCountdown(remaining);
+        
+        if (remaining <= 0) {
+          generateQRToken();
+        }
+      }, 1000);
+
+      return () => clearInterval(countdownInterval);
+    }
+  }, [qrData, qrExpiresAt, generateQRToken]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (qrIntervalRef.current) {
+        clearInterval(qrIntervalRef.current);
+      }
+    };
+  }, []);
+
   const generateQRCode = () => {
     if (!selectedCourse || !selectedYear || !selectedSection || !selectedSubject || !selectedSubjectCode || !selectedDate) {
       toast({
@@ -150,22 +205,18 @@ export default function AttendanceQR() {
       return;
     }
 
-    const qrPayload = {
-      course: selectedCourse,
-      year: selectedYear,
-      section: selectedSection,
-      subject: selectedSubject,
-      subjectCode: selectedSubjectCode,
-      date: format(selectedDate, "yyyy-MM-dd"),
-      teacherId: user.id,
-      timestamp: Date.now(),
-    };
-
-    setQrData(JSON.stringify(qrPayload));
+    generateQRToken();
     toast({
       title: "Success",
-      description: "QR Code generated successfully",
+      description: "Dynamic QR Code started - refreshes every 20 seconds",
     });
+  };
+
+  const stopQRCode = () => {
+    setQrData("");
+    setQrToken("");
+    setQrExpiresAt(0);
+    setQrCountdown(20);
   };
 
   const requestCameraPermission = async (): Promise<boolean> => {
@@ -367,6 +418,26 @@ export default function AttendanceQR() {
     }
 
     try {
+      // Validate QR code token and expiry
+      if (!qrPayload.token || !qrPayload.expiresAt) {
+        toast({
+          title: "Invalid QR Code",
+          description: "This QR code format is not valid",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if QR code has expired
+      if (Date.now() > qrPayload.expiresAt) {
+        toast({
+          title: "QR Code Expired",
+          description: "This QR code has expired. Please scan the new QR code displayed by your teacher.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Check if attendance already marked
       const { data: existing } = await supabase
         .from("attendance")
@@ -531,15 +602,38 @@ export default function AttendanceQR() {
                 </div>
               </div>
               
-              <Button onClick={generateQRCode} className="w-full gradient-primary mb-6">
-                <QrCode className="mr-2 h-4 w-4" />
-                Generate QR Code
-              </Button>
+              <div className="flex gap-2 mb-6">
+                <Button onClick={generateQRCode} className="flex-1 gradient-primary">
+                  <QrCode className="mr-2 h-4 w-4" />
+                  {qrData ? "Regenerate" : "Generate"} QR Code
+                </Button>
+                {qrData && (
+                  <Button onClick={stopQRCode} variant="outline" className="flex-shrink-0">
+                    Stop
+                  </Button>
+                )}
+              </div>
 
               {qrData && (
                 <div className="flex flex-col items-center p-6 sm:p-8 bg-white rounded-lg shadow-inner">
-                  <QRCodeSVG value={qrData} size={256} level="H" />
-                  <p className="mt-4 text-sm text-gray-600 text-center">Students can scan this QR code to mark attendance</p>
+                  <div className="relative">
+                    <QRCodeSVG value={qrData} size={256} level="H" />
+                    <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg animate-pulse">
+                      {qrCountdown}
+                    </div>
+                  </div>
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-600">QR code refreshes automatically every 20 seconds</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Old QR codes become invalid after expiry
+                    </p>
+                  </div>
+                  <div className="w-full mt-4 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all duration-1000" 
+                      style={{ width: `${(qrCountdown / 20) * 100}%` }}
+                    />
+                  </div>
                 </div>
               )}
             </CardContent>

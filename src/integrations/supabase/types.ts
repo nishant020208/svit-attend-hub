@@ -267,11 +267,123 @@ export type Database = {
         }
         Relationships: []
       }
+      homework: {
+        Row: {
+          course: string
+          created_at: string
+          description: string | null
+          due_date: string
+          homework_type: string
+          id: string
+          section: string
+          subject: string
+          teacher_id: string
+          title: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          course: string
+          created_at?: string
+          description?: string | null
+          due_date: string
+          homework_type?: string
+          id?: string
+          section: string
+          subject: string
+          teacher_id: string
+          title: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          course?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          homework_type?: string
+          id?: string
+          section?: string
+          subject?: string
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_submissions: {
+        Row: {
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
+          grade: string | null
+          homework_id: string
+          id: string
+          status: string
+          student_id: string
+          submitted_at: string
+          teacher_remarks: string | null
+          updated_at: string
+        }
+        Insert: {
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          grade?: string | null
+          homework_id: string
+          id?: string
+          status?: string
+          student_id: string
+          submitted_at?: string
+          teacher_remarks?: string | null
+          updated_at?: string
+        }
+        Update: {
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          grade?: string | null
+          homework_id?: string
+          id?: string
+          status?: string
+          student_id?: string
+          submitted_at?: string
+          teacher_remarks?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_submissions_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_requests: {
         Row: {
+          attendance_credit: number | null
           created_at: string
           end_date: string
           id: string
+          leave_type: string | null
           reason: string
           start_date: string
           status: string
@@ -282,9 +394,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attendance_credit?: number | null
           created_at?: string
           end_date: string
           id?: string
+          leave_type?: string | null
           reason: string
           start_date: string
           status?: string
@@ -295,9 +409,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attendance_credit?: number | null
           created_at?: string
           end_date?: string
           id?: string
+          leave_type?: string | null
           reason?: string
           start_date?: string
           status?: string
