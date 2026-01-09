@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, CheckCircle, XCircle, Clock } from "lucide-react";
@@ -23,6 +24,7 @@ export default function LeaveManagement() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
   const [studentId, setStudentId] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
   
@@ -57,13 +59,13 @@ export default function LeaveManagement() {
 
       setUser(session.user);
 
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .maybeSingle();
+      const [profileRes, subjectsRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
+        supabase.from("subjects").select("*").order("name"),
+      ]);
 
-      setProfile(profileData);
+      setProfile(profileRes.data);
+      setSubjects(subjectsRes.data || []);
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/auth");
@@ -274,12 +276,18 @@ export default function LeaveManagement() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="subject">Subject</Label>
-                    <Input
-                      id="subject"
-                      placeholder="e.g., Data Structures"
-                      value={newLeave.subject}
-                      onChange={(e) => setNewLeave({ ...newLeave, subject: e.target.value })}
-                    />
+                    <Select value={newLeave.subject} onValueChange={(value) => setNewLeave({ ...newLeave, subject: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select subject" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subjects.map((subject) => (
+                          <SelectItem key={subject.id} value={subject.name}>
+                            {subject.name} ({subject.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="reason">Reason</Label>
