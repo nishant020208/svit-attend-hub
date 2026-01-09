@@ -34,6 +34,7 @@ const Install = lazy(() => import("./pages/Install"));
 const ParentLinks = lazy(() => import("./pages/ParentLinks"));
 const LibraryQR = lazy(() => import("./pages/LibraryQR"));
 const LibrarianDashboard = lazy(() => import("./pages/LibrarianDashboard"));
+const BookReturn = lazy(() => import("./pages/BookReturn"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -81,6 +82,7 @@ const App = () => (
               <Route path="/install" element={<Install />} />
               <Route path="/library" element={<LibraryQR />} />
               <Route path="/librarian-dashboard" element={<LibrarianDashboard />} />
+              <Route path="/book-return" element={<BookReturn />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

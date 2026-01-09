@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut, GraduationCap, Bell, Users, Link2, BookOpen, Layers, Eye, Home, User, Shield } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut, GraduationCap, Bell, Users, Link2, BookOpen, Layers, Eye, Home, User, Shield, Library, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
@@ -26,11 +26,14 @@ const tabs = [
   { name: "Announcements", path: "/announcements", icon: Megaphone, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
   { name: "Reports", path: "/reports", icon: FileText, roles: ["ADMIN", "FACULTY"] },
   { name: "Notifications", path: "/notifications", icon: Bell, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
+  { name: "Library", path: "/library", icon: Library, roles: ["STUDENT", "LIBRARIAN", "ADMIN"] },
+  { name: "Book Return", path: "/book-return", icon: ArrowLeftRight, roles: ["STUDENT", "LIBRARIAN", "ADMIN"] },
+  { name: "Librarian Dashboard", path: "/librarian-dashboard", icon: LayoutDashboard, roles: ["LIBRARIAN"] },
   { name: "Students", path: "/students", icon: Users, roles: ["ADMIN"] },
   { name: "Parent Links", path: "/parent-links", icon: Link2, roles: ["ADMIN"] },
   { name: "Courses", path: "/courses", icon: BookOpen, roles: ["ADMIN"] },
   { name: "Subjects", path: "/subjects", icon: Layers, roles: ["ADMIN"] },
-  { name: "Settings", path: "/settings", icon: Settings, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
+  { name: "Settings", path: "/settings", icon: Settings, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT", "LIBRARIAN"] },
 ];
 
 // Mobile bottom nav tabs - simplified for quick access
@@ -129,6 +132,10 @@ export function TopTabs({ userEmail, userName, userRole }: TopTabsProps) {
                       <DropdownMenuItem onClick={() => handlePreviewRole("PARENT")} className="cursor-pointer">
                         <Users className="mr-2 h-4 w-4" />
                         Parent
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePreviewRole("LIBRARIAN")} className="cursor-pointer">
+                        <Library className="mr-2 h-4 w-4" />
+                        Librarian
                       </DropdownMenuItem>
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>

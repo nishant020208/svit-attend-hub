@@ -1,4 +1,4 @@
-import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Library } from "lucide-react";
+import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Library, ArrowLeftRight } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +50,7 @@ export function AppMenu({ userRole }: AppMenuProps) {
     // Students and Librarians get library access
     if (userRole === "STUDENT" || userRole === "LIBRARIAN" || userRole === "ADMIN") {
       items.push({ icon: Library, label: "Library", path: "/library" });
+      items.push({ icon: ArrowLeftRight, label: "Book Return", path: "/book-return" });
     }
 
     // Librarian gets their dashboard link
