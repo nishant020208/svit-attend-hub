@@ -10,10 +10,12 @@ import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 import { DashboardMotivation } from "@/components/dashboard/DashboardMotivation";
 import { AdminDashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { useStudentProfile, useAdminStats } from "@/hooks/useDashboardQueries";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, loading: roleLoading } = useUserRole();
   const [userId, setUserId] = useState<string | undefined>();
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -48,12 +50,12 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (profile && profile.role !== "ADMIN") {
+    if (!roleLoading && role !== "ADMIN") {
       navigate("/dashboard");
     }
-  }, [profile, navigate]);
+  }, [role, roleLoading, navigate]);
 
-  const isLoading = !authChecked || profileLoading;
+  const isLoading = !authChecked || profileLoading || roleLoading;
 
   if (isLoading) {
     return (
@@ -70,7 +72,7 @@ export default function AdminDashboard() {
       <TopTabs
         userEmail={undefined}
         userName={profile?.name}
-        userRole={profile?.role}
+        userRole={role || undefined}
       />
       <main className="container mx-auto p-4 md:p-6">
         {/* Motivation Quote */}

@@ -8,7 +8,13 @@ export default function Auth() {
 
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      // If the browser has a stale refresh token, clear it so login can work again.
+      if (error?.message?.toLowerCase().includes("refresh token")) {
+        await supabase.auth.signOut();
+        return;
+      }
+
       if (session) {
         navigate("/dashboard");
       }
