@@ -35,6 +35,7 @@ const ParentLinks = lazy(() => import("./pages/ParentLinks"));
 const LibraryQR = lazy(() => import("./pages/LibraryQR"));
 const LibrarianDashboard = lazy(() => import("./pages/LibrarianDashboard"));
 const BookReturn = lazy(() => import("./pages/BookReturn"));
+const Homework = lazy(() => import("./pages/Homework"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -83,6 +84,7 @@ const App = () => (
               <Route path="/library" element={<LibraryQR />} />
               <Route path="/librarian-dashboard" element={<LibrarianDashboard />} />
               <Route path="/book-return" element={<BookReturn />} />
+              <Route path="/homework" element={<Homework />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
