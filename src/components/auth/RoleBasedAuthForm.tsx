@@ -84,10 +84,13 @@ export function RoleBasedAuthForm() {
         });
         navigate("/dashboard");
       }
-    } catch (_error) {
+    } catch (err: any) {
+      const message = err?.message?.toLowerCase?.() || "";
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Login Failed",
+        description: message.includes("fetch")
+          ? "Network error — please check your internet connection and try again."
+          : "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -128,10 +131,13 @@ export function RoleBasedAuthForm() {
         signupForm.reset();
         setAuthTab("login");
       }
-    } catch (error) {
+    } catch (err: any) {
+      const message = err?.message?.toLowerCase?.() || "";
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "Signup Failed",
+        description: message.includes("fetch")
+          ? "Network error — please check your internet connection and try again."
+          : "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
