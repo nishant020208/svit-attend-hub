@@ -333,7 +333,7 @@ export default function Notifications() {
                             {!notification.read && <Badge>New</Badge>}
                           </div>
                         </div>
-                        <p className="text-muted-foreground text-sm">{notification.message}</p>
+                        <p className="text-foreground text-sm">{notification.message}</p>
                         <p className="text-xs text-muted-foreground mt-2">
                           {new Date(notification.created_at).toLocaleString()}
                         </p>
@@ -436,7 +436,7 @@ export default function Notifications() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">{message.content}</p>
+                    <p className="text-sm text-foreground">{message.content}</p>
                     <p className="text-xs text-muted-foreground mt-2">
                       {new Date(message.created_at).toLocaleString()}
                     </p>
