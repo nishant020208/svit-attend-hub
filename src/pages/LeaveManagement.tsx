@@ -417,6 +417,15 @@ export default function LeaveManagement() {
               <CardContent>
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">{request.reason}</p>
+
+                  {request.attachment_url && (
+                    <Button variant="outline" size="sm" onClick={async () => {
+                      const { data } = await supabase.storage.from('leave-attachments').createSignedUrl(request.attachment_url, 3600);
+                      if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                    }}>
+                      <Download className="mr-2 h-4 w-4" />View Attachment
+                    </Button>
+                  )}
                   
                   {request.teacher_remarks && (
                     <div className="pt-3 border-t">
