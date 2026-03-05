@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity, BookOpen, Calendar, Bell } from "lucide-react";
+import { Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity, BookOpen, Calendar, Bell, Building2, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
@@ -182,7 +182,15 @@ export default function AdminDashboard() {
               <CardDescription>Core administrative functions</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3">
-              <Button onClick={() => navigate("/settings")} className="w-full justify-start h-auto py-4">
+              <Button onClick={() => navigate("/course-structure")} className="w-full justify-start h-auto py-4">
+                <Building2 className="mr-2 h-5 w-5" />
+                Course Structure (Class/Batch/Section)
+              </Button>
+              <Button onClick={() => navigate("/student-assign")} variant="outline" className="w-full justify-start h-auto py-4">
+                <UserPlus className="mr-2 h-5 w-5" />
+                Student Assignment
+              </Button>
+              <Button onClick={() => navigate("/settings")} variant="outline" className="w-full justify-start h-auto py-4">
                 <Shield className="mr-2 h-5 w-5" />
                 User Management & Whitelist
               </Button>
