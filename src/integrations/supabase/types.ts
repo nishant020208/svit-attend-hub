@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_sections: {
+        Row: {
+          batch_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academic_sections_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcements: {
         Row: {
           attachment_url: string | null
@@ -21,6 +53,12 @@ export type Database = {
           created_at: string
           id: string
           posted_by: string
+          target_batch_id: string | null
+          target_class_id: string | null
+          target_section_id: string | null
+          target_student_id: string | null
+          target_subsection_id: string | null
+          target_type: string
           title: string
           updated_at: string
         }
@@ -30,6 +68,12 @@ export type Database = {
           created_at?: string
           id?: string
           posted_by: string
+          target_batch_id?: string | null
+          target_class_id?: string | null
+          target_section_id?: string | null
+          target_student_id?: string | null
+          target_subsection_id?: string | null
+          target_type?: string
           title: string
           updated_at?: string
         }
@@ -39,6 +83,12 @@ export type Database = {
           created_at?: string
           id?: string
           posted_by?: string
+          target_batch_id?: string | null
+          target_class_id?: string | null
+          target_section_id?: string | null
+          target_student_id?: string | null
+          target_subsection_id?: string | null
+          target_type?: string
           title?: string
           updated_at?: string
         }
@@ -48,6 +98,41 @@ export type Database = {
             columns: ["posted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_target_batch_id_fkey"
+            columns: ["target_batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_target_class_id_fkey"
+            columns: ["target_class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_target_section_id_fkey"
+            columns: ["target_section_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_target_student_id_fkey"
+            columns: ["target_student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_target_subsection_id_fkey"
+            columns: ["target_subsection_id"]
+            isOneToOne: false
+            referencedRelation: "subsections"
             referencedColumns: ["id"]
           },
         ]
@@ -93,6 +178,38 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      batches: {
+        Row: {
+          class_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batches_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
             referencedColumns: ["id"]
           },
         ]
@@ -157,6 +274,30 @@ export type Database = {
         }
         Update: {
           added_by?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      classes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
           code?: string
           created_at?: string
           id?: string
@@ -379,6 +520,7 @@ export type Database = {
       }
       leave_requests: {
         Row: {
+          attachment_url: string | null
           attendance_credit: number | null
           created_at: string
           end_date: string
@@ -394,6 +536,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attachment_url?: string | null
           attendance_credit?: number | null
           created_at?: string
           end_date: string
@@ -409,6 +552,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attachment_url?: string | null
           attendance_credit?: number | null
           created_at?: string
           end_date?: string
@@ -658,6 +802,75 @@ export type Database = {
           },
         ]
       }
+      student_assignments: {
+        Row: {
+          batch_id: string
+          class_id: string
+          created_at: string
+          id: string
+          section_id: string
+          student_id: string
+          subsection_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          class_id: string
+          created_at?: string
+          id?: string
+          section_id: string
+          student_id: string
+          subsection_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          class_id?: string
+          created_at?: string
+          id?: string
+          section_id?: string
+          student_id?: string
+          subsection_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_assignments_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assignments_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assignments_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_assignments_subsection_id_fkey"
+            columns: ["subsection_id"]
+            isOneToOne: false
+            referencedRelation: "subsections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           course: string
@@ -722,6 +935,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      subsections: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          section_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          section_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          section_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subsections_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "academic_sections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       timetable: {
         Row: {
