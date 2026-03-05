@@ -303,6 +303,18 @@ export default function LeaveManagement() {
                         onChange={(e) => setNewLeave({ ...newLeave, endDate: e.target.value })} />
                     </div>
                   </div>
+                  <div>
+                    <Label>Attachment (PDF, DOC, JPG, PNG)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        onChange={(e) => setLeaveFile(e.target.files?.[0] || null)}
+                      />
+                      {leaveFile && <Paperclip className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Max 10MB. Optional supporting document.</p>
+                  </div>
                   {newLeave.startDate && newLeave.endDate && (
                     <div className="p-3 bg-muted rounded-lg">
                       <p className="text-sm">
