@@ -327,13 +327,13 @@ export default function Notifications() {
                       {getNotificationIcon(notification.type)}
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold">{notification.title}</h3>
+                          <h3 className="font-semibold text-foreground">{notification.title}</h3>
                           <div className="flex items-center gap-2">
                             {getPriorityBadge(notification.priority)}
                             {!notification.read && <Badge>New</Badge>}
                           </div>
                         </div>
-                        <p className="text-muted-foreground text-sm">{notification.message}</p>
+                        <p className="text-foreground text-sm">{notification.message}</p>
                         <p className="text-xs text-muted-foreground mt-2">
                           {new Date(notification.created_at).toLocaleString()}
                         </p>
@@ -436,7 +436,7 @@ export default function Notifications() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">{message.content}</p>
+                    <p className="text-sm text-foreground">{message.content}</p>
                     <p className="text-xs text-muted-foreground mt-2">
                       {new Date(message.created_at).toLocaleString()}
                     </p>
@@ -516,7 +516,7 @@ export default function Notifications() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm whitespace-pre-wrap">{announcement.content}</p>
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{announcement.content}</p>
                       <p className="text-xs text-muted-foreground mt-2">
                         {new Date(announcement.created_at).toLocaleString()}
                       </p>

@@ -11,9 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, CheckCircle, XCircle, Clock, AlertTriangle, Heart, Percent } from "lucide-react";
+import { Plus, CheckCircle, XCircle, Clock, AlertTriangle, Heart, Percent, Paperclip, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
+const ALLOWED_LEAVE_FILE_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png'];
+const MAX_LEAVE_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const LEAVE_TYPES = [
   { value: "regular", label: "Regular Leave", credit: 0, description: "No attendance credit" },
@@ -45,6 +48,7 @@ export default function LeaveManagement() {
     endDate: "",
     leaveType: "regular",
   });
+  const [leaveFile, setLeaveFile] = useState<File | null>(null);
 
   useEffect(() => { checkAuth(); }, []);
 
@@ -107,7 +111,29 @@ export default function LeaveManagement() {
       toast({ title: "Error", description: "Student ID not found.", variant: "destructive" });
       return;
     }
+
+    // Validate file if provided
+    if (leaveFile) {
+      if (!ALLOWED_LEAVE_FILE_TYPES.includes(leaveFile.type)) {
+        toast({ title: "Invalid File", description: "Only PDF, DOC/DOCX, JPG, PNG files are allowed", variant: "destructive" });
+        return;
+      }
+      if (leaveFile.size > MAX_LEAVE_FILE_SIZE) {
+        toast({ title: "File Too Large", description: "Maximum file size is 10MB", variant: "destructive" });
+        return;
+      }
+    }
+
     try {
+      let attachmentUrl = null;
+      if (leaveFile) {
+        const fileExt = leaveFile.name.split('.').pop();
+        const fileName = `${Date.now()}_${studentId}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('leave-attachments').upload(fileName, leaveFile);
+        if (uploadError) throw uploadError;
+        attachmentUrl = fileName;
+      }
+
       const leaveTypeInfo = LEAVE_TYPES.find(t => t.value === newLeave.leaveType);
       const { error } = await supabase.from("leave_requests").insert({
         student_id: studentId,
@@ -118,10 +144,12 @@ export default function LeaveManagement() {
         status: "PENDING",
         leave_type: newLeave.leaveType,
         attendance_credit: leaveTypeInfo?.credit || 0,
+        attachment_url: attachmentUrl,
       });
       if (error) throw error;
       toast({ title: "Success", description: "Leave request submitted" });
       setNewLeave({ subject: "", reason: "", startDate: "", endDate: "", leaveType: "regular" });
+      setLeaveFile(null);
       setDialogOpen(false);
       await fetchLeaveRequests();
     } catch (error: any) {
@@ -275,6 +303,18 @@ export default function LeaveManagement() {
                         onChange={(e) => setNewLeave({ ...newLeave, endDate: e.target.value })} />
                     </div>
                   </div>
+                  <div>
+                    <Label>Attachment (PDF, DOC, JPG, PNG)</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        onChange={(e) => setLeaveFile(e.target.files?.[0] || null)}
+                      />
+                      {leaveFile && <Paperclip className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Max 10MB. Optional supporting document.</p>
+                  </div>
                   {newLeave.startDate && newLeave.endDate && (
                     <div className="p-3 bg-muted rounded-lg">
                       <p className="text-sm">
@@ -377,6 +417,15 @@ export default function LeaveManagement() {
               <CardContent>
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">{request.reason}</p>
+
+                  {request.attachment_url && (
+                    <Button variant="outline" size="sm" onClick={async () => {
+                      const { data } = await supabase.storage.from('leave-attachments').createSignedUrl(request.attachment_url, 3600);
+                      if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                    }}>
+                      <Download className="mr-2 h-4 w-4" />View Attachment
+                    </Button>
+                  )}
                   
                   {request.teacher_remarks && (
                     <div className="pt-3 border-t">
