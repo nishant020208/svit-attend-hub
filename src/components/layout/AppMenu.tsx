@@ -1,4 +1,4 @@
-import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Library, ArrowLeftRight, PenSquare } from "lucide-react";
+import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Library, ArrowLeftRight, PenSquare, Building2, UserPlus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,10 +66,9 @@ export function AppMenu({ userRole }: AppMenuProps) {
     // Only Admin gets student management
     if (userRole === "ADMIN") {
       items.push({ icon: Users, label: "Student Management", path: "/students" });
-    }
-
-    if (userRole === "ADMIN") {
       items.push({ icon: Users, label: "Course Management", path: "/courses" });
+      items.push({ icon: Building2, label: "Course Structure", path: "/course-structure" });
+      items.push({ icon: UserPlus, label: "Student Assign", path: "/student-assign" });
     }
 
     return items;
