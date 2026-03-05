@@ -516,7 +516,7 @@ export default function Notifications() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-sm whitespace-pre-wrap">{announcement.content}</p>
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{announcement.content}</p>
                       <p className="text-xs text-muted-foreground mt-2">
                         {new Date(announcement.created_at).toLocaleString()}
                       </p>
