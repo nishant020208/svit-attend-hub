@@ -327,7 +327,7 @@ export default function Notifications() {
                       {getNotificationIcon(notification.type)}
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold">{notification.title}</h3>
+                          <h3 className="font-semibold text-foreground">{notification.title}</h3>
                           <div className="flex items-center gap-2">
                             {getPriorityBadge(notification.priority)}
                             {!notification.read && <Badge>New</Badge>}
