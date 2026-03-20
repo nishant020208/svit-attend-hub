@@ -158,7 +158,7 @@ export default function LibraryQR() {
 
     const { error } = await supabase
       .from("books")
-      .insert({ name: newBookName, code: newBookCode, added_by: user.id });
+      .insert({ name: newBookName, code: newBookCode, added_by: user.id, total_copies: newBookCopies });
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
