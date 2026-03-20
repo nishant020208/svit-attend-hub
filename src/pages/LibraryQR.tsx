@@ -33,6 +33,7 @@ export default function LibraryQR() {
   const [borrowings, setBorrowings] = useState<any[]>([]);
   const [newBookName, setNewBookName] = useState("");
   const [newBookCode, setNewBookCode] = useState("");
+  const [newBookCopies, setNewBookCopies] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // QR Generation (Librarian)
@@ -157,7 +158,7 @@ export default function LibraryQR() {
 
     const { error } = await supabase
       .from("books")
-      .insert({ name: newBookName, code: newBookCode, added_by: user.id });
+      .insert({ name: newBookName, code: newBookCode, added_by: user.id, total_copies: newBookCopies });
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -167,6 +168,7 @@ export default function LibraryQR() {
     toast({ title: "Success", description: "Book added successfully" });
     setNewBookName("");
     setNewBookCode("");
+    setNewBookCopies(1);
     setDialogOpen(false);
     fetchBooks();
   };
@@ -355,7 +357,7 @@ export default function LibraryQR() {
                       Add New Book
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Add New Book</DialogTitle>
                       <DialogDescription>Enter book details</DialogDescription>
@@ -369,24 +371,37 @@ export default function LibraryQR() {
                         <Label>Book Code</Label>
                         <Input value={newBookCode} onChange={(e) => setNewBookCode(e.target.value)} placeholder="e.g., DS-001" />
                       </div>
+                      <div>
+                        <Label>Total Copies</Label>
+                        <Input type="number" min={1} value={newBookCopies} onChange={(e) => setNewBookCopies(parseInt(e.target.value) || 1)} placeholder="1" />
+                      </div>
                       <Button onClick={handleAddBook} className="w-full gradient-primary">Add Book</Button>
                     </div>
                   </DialogContent>
                 </Dialog>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {books.map((book) => (
-                    <Card key={book.id} className="border-primary/20">
-                      <CardContent className="pt-4">
-                        <h3 className="font-semibold">{book.name}</h3>
-                        <p className="text-sm text-muted-foreground">Code: {book.code}</p>
-                        <Button onClick={() => generateBookQR(book)} size="sm" className="mt-3 w-full">
-                          <QrCode className="mr-2 h-4 w-4" />
-                          Generate QR
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {books.map((book) => {
+                    const borrowed = borrowings.filter(b => b.book_id === book.id && b.status === "BORROWED").length;
+                    const available = (book.total_copies || 1) - borrowed;
+                    return (
+                      <Card key={book.id} className="border-primary/20">
+                        <CardContent className="pt-4">
+                          <h3 className="font-semibold">{book.name}</h3>
+                          <p className="text-sm text-muted-foreground">Code: {book.code}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant={available > 0 ? "default" : "destructive"}>
+                              {available}/{book.total_copies || 1} available
+                            </Badge>
+                          </div>
+                          <Button onClick={() => generateBookQR(book)} size="sm" className="mt-3 w-full" disabled={available <= 0}>
+                            <QrCode className="mr-2 h-4 w-4" />
+                            {available > 0 ? "Generate QR" : "No Copies Available"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
 
                 {qrData && selectedBook && (

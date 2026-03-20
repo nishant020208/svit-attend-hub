@@ -1,4 +1,4 @@
-import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Library, ArrowLeftRight, PenSquare, Building2, UserPlus } from "lucide-react";
+import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Library, ArrowLeftRight, PenSquare, Building2, UserPlus, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +40,7 @@ export function AppMenu({ userRole }: AppMenuProps) {
       { icon: FileText, label: "Leave Management", path: "/leave" },
       { icon: Bell, label: "Announcements", path: "/announcements" },
       { icon: BookOpen, label: "Reports", path: "/reports" },
+      { icon: MessageSquare, label: "Feedback", path: "/feedback" },
     ];
 
     // Teachers/Faculty and Admin get attendance access

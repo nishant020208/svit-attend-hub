@@ -23,6 +23,7 @@ export default function LibrarianDashboard() {
     activeBorrowings: 0,
     overdueBooks: 0,
     totalFeesDue: 0,
+    availableCopies: 0,
   });
   const [overdueBorrowings, setOverdueBorrowings] = useState<any[]>([]);
   const [recentBorrowings, setRecentBorrowings] = useState<any[]>([]);
@@ -65,10 +66,13 @@ export default function LibrarianDashboard() {
   const fetchStats = async () => {
     setStatsLoading(true);
     try {
-      // Total books
-      const { count: bookCount } = await supabase
+      // Total books with copies
+      const { data: booksData } = await supabase
         .from("books")
-        .select("*", { count: "exact", head: true });
+        .select("id, total_copies");
+      
+      const totalBooks = booksData?.length || 0;
+      const totalCopies = booksData?.reduce((sum, b) => sum + (b.total_copies || 1), 0) || 0;
 
       // Active borrowings
       const { data: activeBorrowingsData, count: activeCount } = await supabase
@@ -101,10 +105,11 @@ export default function LibrarianDashboard() {
         .limit(5);
 
       setStats({
-        totalBooks: bookCount || 0,
+        totalBooks: totalBooks,
         activeBorrowings: activeCount || 0,
         overdueBooks: overdueCount,
         totalFeesDue: totalFees,
+        availableCopies: totalCopies - (activeCount || 0),
       });
       setOverdueBorrowings(overdueList);
       setRecentBorrowings(recentData || []);
@@ -153,7 +158,7 @@ export default function LibrarianDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
           <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-blue-500/20 hover:shadow-xl transition-all">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Books</CardTitle>
@@ -164,6 +169,19 @@ export default function LibrarianDashboard() {
                 {statsLoading ? "..." : stats.totalBooks}
               </div>
               <p className="text-xs text-muted-foreground mt-1">In library collection</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/10 border-cyan-500/20 hover:shadow-xl transition-all">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Available Copies</CardTitle>
+              <BookOpen className="h-5 w-5 text-cyan-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {statsLoading ? "..." : stats.availableCopies}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Ready to borrow</p>
             </CardContent>
           </Card>
 
