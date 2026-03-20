@@ -262,6 +262,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          total_copies: number
           updated_at: string
         }
         Insert: {
@@ -270,6 +271,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          total_copies?: number
           updated_at?: string
         }
         Update: {
@@ -278,6 +280,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          total_copies?: number
           updated_at?: string
         }
         Relationships: []
@@ -375,6 +378,48 @@ export type Database = {
           subject?: string
           updated_at?: string
           year?: number
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          admin_response: string | null
+          ai_category: string | null
+          ai_priority: string | null
+          category: string
+          created_at: string
+          id: string
+          message: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          ai_category?: string | null
+          ai_priority?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          ai_category?: string | null
+          ai_priority?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -622,6 +667,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      parent_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          id: string
+          message: string
+          parent_id: string
+          student_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          id?: string
+          message: string
+          parent_id: string
+          student_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          parent_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_alerts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parent_student_relation: {
         Row: {
