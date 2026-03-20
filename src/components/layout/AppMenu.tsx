@@ -1,4 +1,4 @@
-import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Library, ArrowLeftRight, PenSquare, Building2, UserPlus } from "lucide-react";
+import { Menu, Settings, LogOut, LayoutDashboard, Calendar, FileText, Users, Bell, BookOpen, ClipboardList, Library, ArrowLeftRight, PenSquare, Building2, UserPlus, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
