@@ -355,7 +355,7 @@ export default function LibraryQR() {
                       Add New Book
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Add New Book</DialogTitle>
                       <DialogDescription>Enter book details</DialogDescription>
@@ -368,6 +368,10 @@ export default function LibraryQR() {
                       <div>
                         <Label>Book Code</Label>
                         <Input value={newBookCode} onChange={(e) => setNewBookCode(e.target.value)} placeholder="e.g., DS-001" />
+                      </div>
+                      <div>
+                        <Label>Total Copies</Label>
+                        <Input type="number" min={1} value={newBookCopies} onChange={(e) => setNewBookCopies(parseInt(e.target.value) || 1)} placeholder="1" />
                       </div>
                       <Button onClick={handleAddBook} className="w-full gradient-primary">Add Book</Button>
                     </div>
