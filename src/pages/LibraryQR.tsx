@@ -33,6 +33,7 @@ export default function LibraryQR() {
   const [borrowings, setBorrowings] = useState<any[]>([]);
   const [newBookName, setNewBookName] = useState("");
   const [newBookCode, setNewBookCode] = useState("");
+  const [newBookCopies, setNewBookCopies] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // QR Generation (Librarian)
