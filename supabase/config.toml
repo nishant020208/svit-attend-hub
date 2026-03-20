@@ -8,3 +8,15 @@ verify_jwt = false
 
 [functions.send-notification-email]
 verify_jwt = false
+
+[functions.ai-help-assistant]
+verify_jwt = false
+
+[functions.analyze-feedback]
+verify_jwt = false
+
+[functions.parent-notifications]
+verify_jwt = false
+
+[functions.library-notifications]
+verify_jwt = false
