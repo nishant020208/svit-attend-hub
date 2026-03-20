@@ -168,6 +168,7 @@ export default function LibraryQR() {
     toast({ title: "Success", description: "Book added successfully" });
     setNewBookName("");
     setNewBookCode("");
+    setNewBookCopies(1);
     setDialogOpen(false);
     fetchBooks();
   };

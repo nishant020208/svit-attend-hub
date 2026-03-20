@@ -90,6 +90,7 @@ const App = () => (
               <Route path="/homework" element={<Homework />} />
               <Route path="/course-structure" element={<CourseStructure />} />
               <Route path="/student-assign" element={<StudentAssign />} />
+              <Route path="/feedback" element={<Feedback />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
