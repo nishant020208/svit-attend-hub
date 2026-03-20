@@ -105,10 +105,11 @@ export default function LibrarianDashboard() {
         .limit(5);
 
       setStats({
-        totalBooks: bookCount || 0,
+        totalBooks: totalBooks,
         activeBorrowings: activeCount || 0,
         overdueBooks: overdueCount,
         totalFeesDue: totalFees,
+        availableCopies: totalCopies - (activeCount || 0),
       });
       setOverdueBorrowings(overdueList);
       setRecentBorrowings(recentData || []);
