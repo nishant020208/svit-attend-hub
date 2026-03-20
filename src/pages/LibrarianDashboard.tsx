@@ -153,7 +153,7 @@ export default function LibrarianDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
           <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-blue-500/20 hover:shadow-xl transition-all">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Books</CardTitle>
@@ -164,6 +164,19 @@ export default function LibrarianDashboard() {
                 {statsLoading ? "..." : stats.totalBooks}
               </div>
               <p className="text-xs text-muted-foreground mt-1">In library collection</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/10 border-cyan-500/20 hover:shadow-xl transition-all">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Available Copies</CardTitle>
+              <BookOpen className="h-5 w-5 text-cyan-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {statsLoading ? "..." : stats.availableCopies}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Ready to borrow</p>
             </CardContent>
           </Card>
 
