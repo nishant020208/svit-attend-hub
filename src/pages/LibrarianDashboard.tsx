@@ -23,6 +23,7 @@ export default function LibrarianDashboard() {
     activeBorrowings: 0,
     overdueBooks: 0,
     totalFeesDue: 0,
+    availableCopies: 0,
   });
   const [overdueBorrowings, setOverdueBorrowings] = useState<any[]>([]);
   const [recentBorrowings, setRecentBorrowings] = useState<any[]>([]);
