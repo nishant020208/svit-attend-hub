@@ -66,10 +66,13 @@ export default function LibrarianDashboard() {
   const fetchStats = async () => {
     setStatsLoading(true);
     try {
-      // Total books
-      const { count: bookCount } = await supabase
+      // Total books with copies
+      const { data: booksData } = await supabase
         .from("books")
-        .select("*", { count: "exact", head: true });
+        .select("id, total_copies");
+      
+      const totalBooks = booksData?.length || 0;
+      const totalCopies = booksData?.reduce((sum, b) => sum + (b.total_copies || 1), 0) || 0;
 
       // Active borrowings
       const { data: activeBorrowingsData, count: activeCount } = await supabase
