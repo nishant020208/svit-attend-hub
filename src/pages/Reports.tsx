@@ -483,7 +483,7 @@ export default function Reports() {
       <main className="container mx-auto p-6 space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold gradient-primary bg-clip-text text-transparent">Analytics Dashboard</h1>
+            <h1 className="text-4xl font-bold text-foreground">Analytics Dashboard</h1>
             <p className="text-muted-foreground mt-2">AI-powered performance insights and predictions</p>
           </div>
           {(role === "ADMIN" || role === "FACULTY") && (
