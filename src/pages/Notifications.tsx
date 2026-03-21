@@ -282,7 +282,7 @@ export default function Notifications() {
       <main className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-4xl font-bold gradient-primary bg-clip-text text-transparent">Notifications & Messages</h1>
+            <h1 className="text-4xl font-bold text-foreground">Notifications & Messages</h1>
             <p className="text-muted-foreground mt-2">Stay updated with real-time notifications</p>
           </div>
           <Badge variant="destructive" className="text-lg px-4 py-2">
