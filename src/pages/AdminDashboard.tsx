@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity, BookOpen, Calendar, Bell, Building2, UserPlus } from "lucide-react";
+import { Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity, BookOpen, Calendar, Bell, Building2, UserPlus, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
@@ -220,12 +220,36 @@ export default function AdminDashboard() {
                 Generate Reports
               </Button>
               <Button onClick={() => navigate("/announcements")} variant="outline" className="w-full justify-start h-auto py-4">
-                <Users className="mr-2 h-5 w-5" />
+                <Bell className="mr-2 h-5 w-5" />
                 Manage Announcements
               </Button>
               <Button onClick={() => navigate("/leave")} variant="outline" className="w-full justify-start h-auto py-4">
                 <UserCheck className="mr-2 h-5 w-5" />
                 Leave Management
+              </Button>
+              <Button onClick={() => navigate("/feedback")} variant="outline" className="w-full justify-start h-auto py-4">
+                <MessageSquare className="mr-2 h-5 w-5" />
+                Feedback & Complaints
+              </Button>
+              <Button onClick={() => navigate("/homework")} variant="outline" className="w-full justify-start h-auto py-4">
+                <BookOpen className="mr-2 h-5 w-5" />
+                Homework Management
+              </Button>
+              <Button onClick={() => navigate("/notifications")} variant="outline" className="w-full justify-start h-auto py-4">
+                <Bell className="mr-2 h-5 w-5" />
+                Notifications
+              </Button>
+              <Button onClick={() => navigate("/results")} variant="outline" className="w-full justify-start h-auto py-4">
+                <TrendingUp className="mr-2 h-5 w-5" />
+                Results & Grades
+              </Button>
+              <Button onClick={() => navigate("/subjects")} variant="outline" className="w-full justify-start h-auto py-4">
+                <BookOpen className="mr-2 h-5 w-5" />
+                Subject Management
+              </Button>
+              <Button onClick={() => navigate("/library")} variant="outline" className="w-full justify-start h-auto py-4">
+                <Building2 className="mr-2 h-5 w-5" />
+                Library Management
               </Button>
             </CardContent>
           </Card>
