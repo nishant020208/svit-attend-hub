@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { TopTabs } from "@/components/layout/TopTabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity, BookOpen, Calendar, Bell, Building2, UserPlus } from "lucide-react";
+import { Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity, BookOpen, Calendar, Bell, Building2, UserPlus, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
