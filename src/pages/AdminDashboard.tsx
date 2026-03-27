@@ -144,6 +144,9 @@ export default function AdminDashboard() {
         {/* Motivation */}
         <DashboardMotivation />
 
+        {/* AI Insights */}
+        <AIInsightsPanel />
+
         {/* Live Stats Row */}
         <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 mb-6">
           <Card
