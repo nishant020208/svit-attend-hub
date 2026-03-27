@@ -196,9 +196,8 @@ export default function Attendance() {
   if (loading || roleLoading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
-      <main className="container mx-auto p-4 md:p-6">
+    <DashboardLayout>
+      <div>
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">Attendance Management</h1>
           <p className="text-muted-foreground">
