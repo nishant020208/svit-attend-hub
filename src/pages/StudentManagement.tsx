@@ -277,9 +277,8 @@ export default function StudentManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopTabs userEmail={user?.email} userName={user?.user_metadata?.name} userRole={role || undefined} />
-      <main className="container mx-auto p-6">
+    <DashboardLayout>
+      <div>
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Student Management</h1>
           <p className="text-muted-foreground">Add and manage students by class</p>
