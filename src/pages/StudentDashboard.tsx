@@ -206,7 +206,7 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

@@ -264,7 +264,7 @@ export default function TeacherDashboard() {
             </Button>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

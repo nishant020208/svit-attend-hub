@@ -399,7 +399,7 @@ export default function ParentDashboard() {
             })}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
