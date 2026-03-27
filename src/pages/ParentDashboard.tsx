@@ -220,11 +220,8 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <FloatingGeometry variant="colorful" />
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
-
-      <main className="container mx-auto p-4 md:p-6 space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
         {/* Motivation Quote */}
         <DashboardMotivation />
         
