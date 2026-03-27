@@ -80,14 +80,8 @@ export default function StudentDashboard() {
   const attendanceColor = (attendanceStats?.percentage || 0) >= 75 ? "text-green-600" : "text-destructive";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <FloatingGeometry variant="default" />
-      <TopTabs
-        userEmail={userId ? undefined : undefined}
-        userName={profile?.name}
-        userRole={profile?.role}
-      />
-      <main className="container mx-auto p-4 md:p-6">
+    <DashboardLayout>
+      <div className="relative">
         {/* Motivation Quote */}
         <DashboardMotivation />
 
