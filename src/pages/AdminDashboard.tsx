@@ -261,7 +261,7 @@ export default function AdminDashboard() {
                     <div
                       key={idx}
                       className="flex items-center justify-between p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 cursor-pointer transition-colors"
-                      onClick={() => navigate("/attendance")}
+                      onClick={() => navigate(`/student-profile?id=${record.student_id}`)}
                     >
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
