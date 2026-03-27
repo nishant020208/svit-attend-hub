@@ -477,10 +477,8 @@ export default function Reports() {
   ] : [];
 
   return (
-    <div className="min-h-screen bg-background">
-      <FloatingGeometry variant="dark" />
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role} />
-      <main className="container mx-auto p-6 space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold text-foreground">Analytics Dashboard</h1>
