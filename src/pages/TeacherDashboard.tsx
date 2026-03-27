@@ -72,14 +72,8 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
-      <FloatingGeometry variant="minimal" />
-      <TopTabs
-        userEmail={undefined}
-        userName={profile?.name}
-        userRole={profile?.role}
-      />
-      <main className="container mx-auto p-4 md:p-6">
+    <DashboardLayout>
+      <div className="relative">
         {/* Motivation Quote */}
         <DashboardMotivation />
 
