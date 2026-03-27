@@ -510,7 +510,7 @@ export default function Attendance() {
             </Card>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

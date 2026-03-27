@@ -292,7 +292,7 @@ export default function Announcements() {
             <Card><CardContent className="py-12"><p className="text-muted-foreground text-center">No announcements yet</p></CardContent></Card>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

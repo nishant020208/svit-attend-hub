@@ -484,7 +484,7 @@ export default function StudentManagement() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
