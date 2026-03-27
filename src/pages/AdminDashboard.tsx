@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { TopTabs } from "@/components/layout/TopTabs";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users, GraduationCap, UserCheck, Shield, TrendingUp, Activity,
@@ -95,11 +95,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-background to-slate-100 dark:from-slate-950 dark:via-background dark:to-slate-900">
-      <FloatingGeometry variant="dark" />
-      <TopTabs userEmail={undefined} userName={profile?.name} userRole={role || undefined} />
-      
-      <main className="container mx-auto p-4 md:p-6 pb-24 sm:pb-6">
+    <DashboardLayout>
+      <div className="relative">
         {/* Header with Notification Bell */}
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -264,7 +261,7 @@ export default function AdminDashboard() {
                     <div
                       key={idx}
                       className="flex items-center justify-between p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 cursor-pointer transition-colors"
-                      onClick={() => navigate("/attendance")}
+                      onClick={() => navigate(`/student-profile?id=${record.student_id}`)}
                     >
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
@@ -439,7 +436,7 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
