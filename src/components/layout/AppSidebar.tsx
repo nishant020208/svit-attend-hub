@@ -107,7 +107,7 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
           const hasActive = visibleItems.some((i) => location.pathname === i.url);
 
           return (
-            <SidebarGroup key={group.label} defaultOpen={hasActive || group.label === "Overview"}>
+            <SidebarGroup key={group.label}>
               <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">
                 {group.label}
               </SidebarGroupLabel>

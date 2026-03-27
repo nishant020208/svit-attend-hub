@@ -39,6 +39,7 @@ const Homework = lazy(() => import("./pages/Homework"));
 const CourseStructure = lazy(() => import("./pages/CourseStructure"));
 const StudentAssign = lazy(() => import("./pages/StudentAssign"));
 const Feedback = lazy(() => import("./pages/Feedback"));
+const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
