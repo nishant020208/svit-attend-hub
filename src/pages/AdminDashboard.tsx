@@ -26,6 +26,7 @@ import {
 } from "@/hooks/useAdminDashboardData";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { formatDistanceToNow } from "date-fns";
+import { AIInsightsPanel } from "@/components/dashboard/AIInsightsPanel";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
