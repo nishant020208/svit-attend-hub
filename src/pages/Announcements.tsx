@@ -163,10 +163,8 @@ export default function Announcements() {
   if (loading || roleLoading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-background">
-      <FloatingGeometry variant="default" />
-      <TopTabs userEmail={user?.email} userName={user?.user_metadata?.name} userRole={role || undefined} />
-      <main className="container mx-auto p-6">
+    <DashboardLayout>
+      <div>
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Announcements</h1>
