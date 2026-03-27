@@ -26,6 +26,7 @@ import {
 } from "@/hooks/useAdminDashboardData";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { formatDistanceToNow } from "date-fns";
+import { AIInsightsPanel } from "@/components/dashboard/AIInsightsPanel";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -142,6 +143,9 @@ export default function AdminDashboard() {
 
         {/* Motivation */}
         <DashboardMotivation />
+
+        {/* AI Insights */}
+        <AIInsightsPanel />
 
         {/* Live Stats Row */}
         <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 mb-6">

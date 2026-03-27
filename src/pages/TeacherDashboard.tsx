@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { TopTabs } from "@/components/layout/TopTabs";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ClipboardCheck, FileText, Calendar, Clock, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -72,14 +72,8 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
-      <FloatingGeometry variant="minimal" />
-      <TopTabs
-        userEmail={undefined}
-        userName={profile?.name}
-        userRole={profile?.role}
-      />
-      <main className="container mx-auto p-4 md:p-6">
+    <DashboardLayout>
+      <div className="relative">
         {/* Motivation Quote */}
         <DashboardMotivation />
 
@@ -270,7 +264,7 @@ export default function TeacherDashboard() {
             </Button>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
-import { TopTabs } from "@/components/layout/TopTabs";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -477,10 +477,8 @@ export default function Reports() {
   ] : [];
 
   return (
-    <div className="min-h-screen bg-background">
-      <FloatingGeometry variant="dark" />
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role} />
-      <main className="container mx-auto p-6 space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold text-foreground">Analytics Dashboard</h1>
@@ -951,7 +949,7 @@ export default function Reports() {
             </CardContent>
           </Card>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

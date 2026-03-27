@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { TopTabs } from "@/components/layout/TopTabs";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, TrendingUp, FileText, Bell, Calendar as CalendarIcon, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -220,11 +220,8 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <FloatingGeometry variant="colorful" />
-      <TopTabs userEmail={user?.email} userName={profile?.name} userRole={role || undefined} />
-
-      <main className="container mx-auto p-4 md:p-6 space-y-6">
+    <DashboardLayout>
+      <div className="space-y-6">
         {/* Motivation Quote */}
         <DashboardMotivation />
         
@@ -402,7 +399,7 @@ export default function ParentDashboard() {
             })}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

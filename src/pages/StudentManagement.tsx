@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { studentSchema, type StudentFormData } from "@/lib/validationSchemas";
-import { TopTabs } from "@/components/layout/TopTabs";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { HierarchyFilter } from "@/components/filters/HierarchyFilter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -276,9 +277,8 @@ export default function StudentManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopTabs userEmail={user?.email} userName={user?.user_metadata?.name} userRole={role || undefined} />
-      <main className="container mx-auto p-6">
+    <DashboardLayout>
+      <div>
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Student Management</h1>
           <p className="text-muted-foreground">Add and manage students by class</p>
@@ -484,7 +484,7 @@ export default function StudentManagement() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

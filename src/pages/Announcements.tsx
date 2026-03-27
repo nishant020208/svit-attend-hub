@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { announcementSchema, validateFile, type AnnouncementFormData } from "@/lib/validationSchemas";
-import { TopTabs } from "@/components/layout/TopTabs";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -163,10 +163,8 @@ export default function Announcements() {
   if (loading || roleLoading) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-background">
-      <FloatingGeometry variant="default" />
-      <TopTabs userEmail={user?.email} userName={user?.user_metadata?.name} userRole={role || undefined} />
-      <main className="container mx-auto p-6">
+    <DashboardLayout>
+      <div>
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Announcements</h1>
@@ -294,7 +292,7 @@ export default function Announcements() {
             <Card><CardContent className="py-12"><p className="text-muted-foreground text-center">No announcements yet</p></CardContent></Card>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
