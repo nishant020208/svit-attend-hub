@@ -85,7 +85,7 @@
 
 ## 👨‍💻 Author
 
-Developed with ❤️ by **[Nishant Shah](https://github.com/nishant020208)**
+Developed with by **[Nishant Shah](https://github.com/nishant020208)**
 
 ---
 
