@@ -64,6 +64,13 @@ const sidebarGroups = [
     ],
   },
   {
+    label: "Risk & Intervention",
+    items: [
+      { title: "Risk Analytics", url: "/risk", icon: ShieldAlert, roles: ["ADMIN", "FACULTY"] },
+      { title: "Interventions", url: "/risk/interventions", icon: Activity, roles: ["ADMIN", "FACULTY"] },
+    ],
+  },
+  {
     label: "System",
     items: [
       { title: "Announcements", url: "/announcements", icon: Megaphone, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
