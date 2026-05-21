@@ -4,7 +4,8 @@ import {
   LayoutDashboard, ClipboardCheck, Calendar, GraduationCap,
   Users, BookOpen, Layers, Library, ArrowLeftRight,
   FileText, Bell, Settings, Megaphone, Link2,
-  Building2, UserPlus, PenSquare, User, MessageSquare
+  Building2, UserPlus, PenSquare, User, MessageSquare,
+  ShieldAlert, Activity
 } from "lucide-react";
 import {
   Sidebar,
