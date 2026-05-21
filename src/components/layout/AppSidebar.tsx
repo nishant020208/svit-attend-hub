@@ -4,7 +4,8 @@ import {
   LayoutDashboard, ClipboardCheck, Calendar, GraduationCap,
   Users, BookOpen, Layers, Library, ArrowLeftRight,
   FileText, Bell, Settings, Megaphone, Link2,
-  Building2, UserPlus, PenSquare, User, MessageSquare
+  Building2, UserPlus, PenSquare, User, MessageSquare,
+  ShieldAlert, Activity
 } from "lucide-react";
 import {
   Sidebar,
@@ -60,6 +61,13 @@ const sidebarGroups = [
       { title: "Library", url: "/library", icon: Library, roles: ["STUDENT", "LIBRARIAN", "ADMIN"] },
       { title: "Book Return", url: "/book-return", icon: ArrowLeftRight, roles: ["STUDENT", "LIBRARIAN", "ADMIN"] },
       { title: "Librarian Dashboard", url: "/librarian-dashboard", icon: LayoutDashboard, roles: ["LIBRARIAN"] },
+    ],
+  },
+  {
+    label: "Risk & Intervention",
+    items: [
+      { title: "Risk Analytics", url: "/risk", icon: ShieldAlert, roles: ["ADMIN", "FACULTY"] },
+      { title: "Interventions", url: "/risk/interventions", icon: Activity, roles: ["ADMIN", "FACULTY"] },
     ],
   },
   {

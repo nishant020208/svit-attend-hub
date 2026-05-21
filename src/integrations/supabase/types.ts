@@ -602,6 +602,81 @@ export type Database = {
           },
         ]
       }
+      intervention_outcomes: {
+        Row: {
+          after_attendance: number | null
+          after_avg_marks: number | null
+          before_attendance: number | null
+          before_avg_marks: number | null
+          id: string
+          intervention_id: string
+          measured_at: string
+          risk_score_delta: number | null
+        }
+        Insert: {
+          after_attendance?: number | null
+          after_avg_marks?: number | null
+          before_attendance?: number | null
+          before_avg_marks?: number | null
+          id?: string
+          intervention_id: string
+          measured_at?: string
+          risk_score_delta?: number | null
+        }
+        Update: {
+          after_attendance?: number | null
+          after_avg_marks?: number | null
+          before_attendance?: number | null
+          before_avg_marks?: number | null
+          id?: string
+          intervention_id?: string
+          measured_at?: string
+          risk_score_delta?: number | null
+        }
+        Relationships: []
+      }
+      interventions: {
+        Row: {
+          action_taken: string | null
+          created_at: string
+          faculty_id: string
+          follow_up_date: string | null
+          id: string
+          intervention_type: string
+          notes: string | null
+          status: string
+          student_id: string
+          student_response: string | null
+          updated_at: string
+        }
+        Insert: {
+          action_taken?: string | null
+          created_at?: string
+          faculty_id: string
+          follow_up_date?: string | null
+          id?: string
+          intervention_type: string
+          notes?: string | null
+          status?: string
+          student_id: string
+          student_response?: string | null
+          updated_at?: string
+        }
+        Update: {
+          action_taken?: string | null
+          created_at?: string
+          faculty_id?: string
+          follow_up_date?: string | null
+          id?: string
+          intervention_type?: string
+          notes?: string | null
+          status?: string
+          student_id?: string
+          student_response?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leave_requests: {
         Row: {
           attachment_url: string | null
@@ -667,6 +742,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mentor_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          faculty_id: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          faculty_id: string
+          id?: string
+          student_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          faculty_id?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -886,6 +985,105 @@ export type Database = {
           },
         ]
       }
+      risk_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          alert_type: string
+          created_at: string
+          id: string
+          message: string
+          recipients: Json
+          severity: Database["public"]["Enums"]["risk_level"]
+          student_id: string
+          triggered_by: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          alert_type: string
+          created_at?: string
+          id?: string
+          message: string
+          recipients?: Json
+          severity: Database["public"]["Enums"]["risk_level"]
+          student_id: string
+          triggered_by?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          alert_type?: string
+          created_at?: string
+          id?: string
+          message?: string
+          recipients?: Json
+          severity?: Database["public"]["Enums"]["risk_level"]
+          student_id?: string
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
+      risk_factors_history: {
+        Row: {
+          created_at: string
+          factors: Json
+          id: string
+          level: Database["public"]["Enums"]["risk_level"]
+          score: number
+          snapshot_date: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          factors?: Json
+          id?: string
+          level: Database["public"]["Enums"]["risk_level"]
+          score: number
+          snapshot_date?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          factors?: Json
+          id?: string
+          level?: Database["public"]["Enums"]["risk_level"]
+          score?: number
+          snapshot_date?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
+      risk_scores: {
+        Row: {
+          computed_at: string
+          created_at: string
+          factors: Json
+          id: string
+          level: Database["public"]["Enums"]["risk_level"]
+          reasons: Json
+          score: number
+          student_id: string
+        }
+        Insert: {
+          computed_at?: string
+          created_at?: string
+          factors?: Json
+          id?: string
+          level?: Database["public"]["Enums"]["risk_level"]
+          reasons?: Json
+          score?: number
+          student_id: string
+        }
+        Update: {
+          computed_at?: string
+          created_at?: string
+          factors?: Json
+          id?: string
+          level?: Database["public"]["Enums"]["risk_level"]
+          reasons?: Json
+          score?: number
+          student_id?: string
+        }
+        Relationships: []
+      }
       sections: {
         Row: {
           course_id: string | null
@@ -1030,6 +1228,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subject_performance_snapshots: {
+        Row: {
+          avg_marks: number | null
+          completion_rate: number | null
+          computed_at: string
+          id: string
+          student_id: string
+          subject: string
+          trend: string | null
+        }
+        Insert: {
+          avg_marks?: number | null
+          completion_rate?: number | null
+          computed_at?: string
+          id?: string
+          student_id: string
+          subject: string
+          trend?: string | null
+        }
+        Update: {
+          avg_marks?: number | null
+          completion_rate?: number | null
+          computed_at?: string
+          id?: string
+          student_id?: string
+          subject?: string
+          trend?: string | null
+        }
+        Relationships: []
       }
       subjects: {
         Row: {
@@ -1211,6 +1439,7 @@ export type Database = {
     Enums: {
       app_role: "ADMIN" | "FACULTY" | "STUDENT" | "PARENT" | "LIBRARIAN"
       attendance_status: "PRESENT" | "ABSENT" | "LATE"
+      risk_level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1340,6 +1569,7 @@ export const Constants = {
     Enums: {
       app_role: ["ADMIN", "FACULTY", "STUDENT", "PARENT", "LIBRARIAN"],
       attendance_status: ["PRESENT", "ABSENT", "LATE"],
+      risk_level: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
     },
   },
 } as const
