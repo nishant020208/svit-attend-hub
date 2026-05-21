@@ -1,0 +1,352 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { RiskBadge } from "@/components/risk/RiskBadge";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2, RefreshCw, ShieldAlert, TrendingDown, AlertTriangle, Users, Search } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from "recharts";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+
+type RiskRow = {
+  id: string;
+  student_id: string;
+  score: number;
+  level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  reasons: string[];
+  factors: any;
+  computed_at: string;
+  student?: { roll_number?: string; course?: string; year?: number; section?: string; user_id?: string };
+  profile?: { name?: string; email?: string };
+};
+
+const LEVEL_COLORS: Record<string, string> = {
+  LOW: "hsl(142 76% 40%)",
+  MEDIUM: "hsl(45 93% 50%)",
+  HIGH: "hsl(25 95% 53%)",
+  CRITICAL: "hsl(0 84% 60%)",
+};
+
+export default function RiskAnalytics() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [computing, setComputing] = useState(false);
+  const [rows, setRows] = useState<RiskRow[]>([]);
+  const [search, setSearch] = useState("");
+  const [levelFilter, setLevelFilter] = useState<string>("ALL");
+
+  const fetchAll = async () => {
+    setLoading(true);
+    const { data: scores } = await supabase
+      .from("risk_scores")
+      .select("*")
+      .order("score", { ascending: false });
+
+    if (!scores || scores.length === 0) {
+      setRows([]);
+      setLoading(false);
+      return;
+    }
+
+    const studentIds = scores.map((s: any) => s.student_id);
+    const { data: students } = await supabase
+      .from("students")
+      .select("id, user_id, roll_number, course, year, section")
+      .in("id", studentIds);
+
+    const userIds = (students || []).map((s: any) => s.user_id).filter(Boolean);
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, name, email")
+      .in("id", userIds);
+
+    const sMap = new Map((students || []).map((s: any) => [s.id, s]));
+    const pMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+
+    const merged: RiskRow[] = (scores as any[]).map((sc) => {
+      const stu = sMap.get(sc.student_id) as any;
+      const prof = stu ? pMap.get(stu.user_id) : null;
+      return {
+        ...sc,
+        reasons: Array.isArray(sc.reasons) ? sc.reasons : [],
+        student: stu,
+        profile: prof as any,
+      };
+    });
+    setRows(merged);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
+  const handleCompute = async () => {
+    setComputing(true);
+    try {
+      const { error } = await supabase.functions.invoke("compute-risk-scores", { body: {} });
+      if (error) throw error;
+      toast({ title: "Risk scores updated", description: "Recomputed for all students." });
+      await fetchAll();
+    } catch (e: any) {
+      toast({ title: "Failed to compute risk", description: e.message, variant: "destructive" });
+    } finally {
+      setComputing(false);
+    }
+  };
+
+  const filtered = useMemo(() => {
+    return rows.filter((r) => {
+      if (levelFilter !== "ALL" && r.level !== levelFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        const hay = `${r.profile?.name || ""} ${r.profile?.email || ""} ${r.student?.roll_number || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [rows, levelFilter, search]);
+
+  const counts = useMemo(() => {
+    const c = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 };
+    rows.forEach((r) => { c[r.level]++; });
+    return c;
+  }, [rows]);
+
+  const atRisk = counts.HIGH + counts.CRITICAL;
+
+  const distribution = [
+    { name: "Low", value: counts.LOW, color: LEVEL_COLORS.LOW },
+    { name: "Medium", value: counts.MEDIUM, color: LEVEL_COLORS.MEDIUM },
+    { name: "High", value: counts.HIGH, color: LEVEL_COLORS.HIGH },
+    { name: "Critical", value: counts.CRITICAL, color: LEVEL_COLORS.CRITICAL },
+  ].filter((d) => d.value > 0);
+
+  // Factor-average chart (which factor drags students down most)
+  const factorAvg = useMemo(() => {
+    if (rows.length === 0) return [];
+    const keys = ["attendance", "marks", "assignments", "trend", "lateSubs", "leaveFreq"];
+    return keys.map((k) => {
+      const vals = rows.map((r) => (r.factors?.[k] ?? 0) as number);
+      const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+      // convert to "risk contribution" %
+      return { factor: k, risk: Math.round((1 - avg) * 100) };
+    });
+  }, [rows]);
+
+  return (
+    <DashboardLayout>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <ShieldAlert className="h-6 w-6 text-primary" />
+            Risk Analytics
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Identify at-risk students early using attendance, marks, assignments, and trends.
+          </p>
+        </div>
+        <Button onClick={handleCompute} disabled={computing} className="gap-2">
+          {computing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          Recompute Now
+        </Button>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Total Students</p>
+                <p className="text-2xl font-bold text-foreground">{rows.length}</p>
+              </div>
+              <Users className="h-8 w-8 text-muted-foreground/40" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">At Risk</p>
+                <p className="text-2xl font-bold text-orange-600">{atRisk}</p>
+              </div>
+              <AlertTriangle className="h-8 w-8 text-orange-500/40" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Critical</p>
+                <p className="text-2xl font-bold text-red-600">{counts.CRITICAL}</p>
+              </div>
+              <ShieldAlert className="h-8 w-8 text-red-500/40" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Declining Trend</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {rows.filter((r) => (r.factors?.trend ?? 1) < 0.5).length}
+                </p>
+              </div>
+              <TrendingDown className="h-8 w-8 text-yellow-500/40" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base text-foreground">Risk Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {distribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie data={distribution} cx="50%" cy="50%" innerRadius={50} outerRadius={90} dataKey="value"
+                       label={({ name, value }) => `${name}: ${value}`}>
+                    {distribution.map((d, i) => <Cell key={i} fill={d.color} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No data yet — click Recompute.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base text-foreground">Average Risk Contribution by Factor</CardTitle>
+            <CardDescription>Higher = factor is dragging students down</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {factorAvg.length > 0 ? (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={factorAvg}>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis dataKey="factor" tick={{ fontSize: 11 }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="risk" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No data yet.</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base text-foreground">At-Risk Students</CardTitle>
+          <div className="flex flex-col sm:flex-row gap-2 mt-2">
+            <div className="relative flex-1">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, email, roll number…"
+                className="pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <Select value={levelFilter} onValueChange={setLevelFilter}>
+              <SelectTrigger className="sm:w-44">
+                <SelectValue placeholder="All severities" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All severities</SelectItem>
+                <SelectItem value="CRITICAL">Critical</SelectItem>
+                <SelectItem value="HIGH">High</SelectItem>
+                <SelectItem value="MEDIUM">Medium</SelectItem>
+                <SelectItem value="LOW">Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          ) : filtered.length === 0 ? (
+            <p className="text-center py-10 text-muted-foreground">
+              No risk data. Click <span className="font-medium">Recompute Now</span> to generate.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Roll</TableHead>
+                    <TableHead>Course</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Score</TableHead>
+                    <TableHead>Top Reasons</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell>
+                        <div className="font-medium text-foreground">{r.profile?.name || "—"}</div>
+                        <div className="text-xs text-muted-foreground">{r.profile?.email}</div>
+                      </TableCell>
+                      <TableCell>{r.student?.roll_number || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{r.student?.course} · Y{r.student?.year}</Badge>
+                      </TableCell>
+                      <TableCell><RiskBadge level={r.level} /></TableCell>
+                      <TableCell className="font-semibold">{r.score}</TableCell>
+                      <TableCell className="max-w-xs">
+                        <div className="text-xs text-muted-foreground space-y-0.5">
+                          {r.reasons.slice(0, 2).map((reason, i) => (
+                            <div key={i}>• {reason}</div>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => navigate(`/student-profile?id=${r.student_id}`)}
+                        >
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </DashboardLayout>
+  );
+}
