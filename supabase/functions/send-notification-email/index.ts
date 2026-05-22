@@ -138,12 +138,12 @@ const handler = async (req: Request): Promise<Response> => {
               <p>Notification</p>
             </div>
             <div class="content">
-              ${priorityBadge ? `<div class="priority-badge ${priority}">${priorityBadge}</div>` : ''}
-              <h2>${subject.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</h2>
+              ${priorityBadge ? `<div class="priority-badge ${escapeHtml(priority)}">${escapeHtml(priorityBadge)}</div>` : ''}
+              <h2>${escapeHtml(subject)}</h2>
               <div class="message">
-                ${message.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>')}
+                ${escapeHtml(message).replace(/\n/g, '<br>')}
               </div>
-              ${actionUrl ? `<a href="${encodeURI(actionUrl)}" class="action-button">View Details</a>` : ''}
+              ${actionUrl && isSafeUrl(actionUrl) ? `<a href="${escapeHtml(actionUrl)}" class="action-button">View Details</a>` : ''}
               <div class="footer">
                 <p>This is an automated notification from SVIT Attend Hub</p>
                 <p>If you have any questions, please contact your administrator</p>
