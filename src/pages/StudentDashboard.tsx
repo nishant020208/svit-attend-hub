@@ -17,6 +17,7 @@ import {
   usePendingLeaves,
   useRecentAnnouncements,
 } from "@/hooks/useDashboardQueries";
+import { RiskWidget } from "@/components/risk/RiskWidget";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -149,6 +150,13 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Academic Risk */}
+        {student?.id && (
+          <div className="mb-8">
+            <RiskWidget studentId={student.id} compact />
+          </div>
+        )}
 
         {/* Quick Actions & Announcements */}
         <div className="grid gap-6 lg:grid-cols-2 mb-8">
