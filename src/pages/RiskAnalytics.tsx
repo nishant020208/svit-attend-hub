@@ -159,10 +159,23 @@ export default function RiskAnalytics() {
             Identify at-risk students early using attendance, marks, assignments, and trends.
           </p>
         </div>
-        <Button onClick={handleCompute} disabled={computing} className="gap-2">
-          {computing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          Recompute Now
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={async () => {
+            try {
+              const { error } = await supabase.functions.invoke("risk-alerts-engine", { body: {} });
+              if (error) throw error;
+              toast({ title: "Alerts engine run", description: "Notifications sent to mentors, students and parents." });
+            } catch (e: any) {
+              toast({ title: "Alerts failed", description: e.message, variant: "destructive" });
+            }
+          }} className="gap-2">
+            <AlertTriangle className="h-4 w-4" /> Run Alerts
+          </Button>
+          <Button onClick={handleCompute} disabled={computing} className="gap-2">
+            {computing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Recompute Now
+          </Button>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -334,7 +347,7 @@ export default function RiskAnalytics() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => navigate(`/student-profile?id=${r.student_id}`)}
+                          onClick={() => navigate(`/risk/student?id=${r.student_id}`)}
                         >
                           View
                         </Button>

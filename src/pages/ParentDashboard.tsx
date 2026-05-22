@@ -12,6 +12,7 @@ import { FloatingGeometry } from "@/components/ui/FloatingGeometry";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Badge } from "@/components/ui/badge";
 import { DashboardMotivation } from "@/components/dashboard/DashboardMotivation";
+import { RiskWidget } from "@/components/risk/RiskWidget";
 
 type RecentResult = {
   id: string;
@@ -381,6 +382,9 @@ export default function ParentDashboard() {
                         </div>
                       </div>
                     </div>
+
+                    <RiskWidget studentId={child.id} compact />
+
 
                     <div className="flex gap-3 flex-wrap">
                       <Button size="sm" variant="outline" onClick={() => navigate("/announcements")}>

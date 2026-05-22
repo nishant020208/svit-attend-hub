@@ -42,6 +42,7 @@ const Feedback = lazy(() => import("./pages/Feedback"));
 const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const RiskAnalytics = lazy(() => import("./pages/RiskAnalytics"));
 const Interventions = lazy(() => import("./pages/Interventions"));
+const StudentRiskProfile = lazy(() => import("./pages/StudentRiskProfile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -97,6 +98,7 @@ const App = () => (
               <Route path="/student-profile" element={<StudentProfile />} />
               <Route path="/risk" element={<RiskAnalytics />} />
               <Route path="/risk/interventions" element={<Interventions />} />
+              <Route path="/risk/student" element={<StudentRiskProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
