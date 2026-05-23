@@ -5,7 +5,7 @@ import {
   Users, BookOpen, Layers, Library, ArrowLeftRight,
   FileText, Bell, Settings, Megaphone, Link2,
   Building2, UserPlus, PenSquare, User, MessageSquare,
-  ShieldAlert, Activity
+  ShieldAlert, Activity, Brain, TrendingUp, Grid3x3, Heart, FileSpreadsheet
 } from "lucide-react";
 import {
   Sidebar,
