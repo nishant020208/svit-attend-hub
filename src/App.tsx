@@ -43,6 +43,14 @@ const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const RiskAnalytics = lazy(() => import("./pages/RiskAnalytics"));
 const Interventions = lazy(() => import("./pages/Interventions"));
 const StudentRiskProfile = lazy(() => import("./pages/StudentRiskProfile"));
+const AtRiskStudents = lazy(() => import("./pages/AtRiskStudents"));
+const RiskAIInsights = lazy(() => import("./pages/RiskAIInsights"));
+const RiskTrends = lazy(() => import("./pages/RiskTrends"));
+const RiskAlerts = lazy(() => import("./pages/RiskAlerts"));
+const SubjectAnalytics = lazy(() => import("./pages/SubjectAnalytics"));
+const PerformanceTracking = lazy(() => import("./pages/PerformanceTracking"));
+const CounsellingSessions = lazy(() => import("./pages/CounsellingSessions"));
+const ReportsExport = lazy(() => import("./pages/ReportsExport"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
