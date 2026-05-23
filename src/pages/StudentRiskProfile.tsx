@@ -243,7 +243,7 @@ export default function StudentRiskProfile() {
         </CardHeader>
         <CardContent>
           {aiText ? (
-            <pre className="whitespace-pre-wrap text-sm text-foreground font-sans leading-relaxed">{aiText}</pre>
+            <Markdown>{aiText}</Markdown>
           ) : (
             <p className="text-sm text-muted-foreground">Click Generate to get an AI-powered analysis for this student.</p>
           )}
