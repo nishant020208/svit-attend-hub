@@ -13,6 +13,8 @@ export function AIInsightsPanel() {
   const [insights, setInsights] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatedAt, setGeneratedAt] = useState<Date | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const fetchInsights = async () => {
     setLoading(true);
