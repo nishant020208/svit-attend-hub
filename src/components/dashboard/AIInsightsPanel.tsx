@@ -24,6 +24,7 @@ export function AIInsightsPanel() {
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
       setInsights(data);
+      setGeneratedAt(new Date());
     } catch (err: any) {
       const msg = err?.message || "Failed to load insights";
       setError(msg);
