@@ -107,6 +107,14 @@ const App = () => (
               <Route path="/risk" element={<RiskAnalytics />} />
               <Route path="/risk/interventions" element={<Interventions />} />
               <Route path="/risk/student" element={<StudentRiskProfile />} />
+              <Route path="/risk/at-risk" element={<AtRiskStudents />} />
+              <Route path="/risk/ai-insights" element={<RiskAIInsights />} />
+              <Route path="/risk/trends" element={<RiskTrends />} />
+              <Route path="/risk/alerts" element={<RiskAlerts />} />
+              <Route path="/risk/subjects" element={<SubjectAnalytics />} />
+              <Route path="/risk/performance" element={<PerformanceTracking />} />
+              <Route path="/risk/counselling" element={<CounsellingSessions />} />
+              <Route path="/risk/reports" element={<ReportsExport />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
