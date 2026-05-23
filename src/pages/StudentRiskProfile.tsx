@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RiskBadge } from "@/components/risk/RiskBadge";
 import { LogInterventionDialog } from "@/components/risk/LogInterventionDialog";
+import { Markdown } from "@/components/ui/markdown";
 import {
   Loader2, ShieldAlert, RefreshCw, Sparkles, TrendingDown, BookOpen, Calendar, ArrowLeft,
 } from "lucide-react";
