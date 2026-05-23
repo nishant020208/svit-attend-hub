@@ -214,7 +214,11 @@ const AIHelpAssistant = () => {
                           : "bg-muted/80 backdrop-blur-sm border border-border/50 rounded-bl-md"
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                      {message.role === "assistant" ? (
+                        <Markdown className="text-sm">{message.content}</Markdown>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                      )}
                     </div>
                     {message.role === "user" && (
                       <div className="flex-shrink-0">
