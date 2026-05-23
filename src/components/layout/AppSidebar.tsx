@@ -5,7 +5,7 @@ import {
   Users, BookOpen, Layers, Library, ArrowLeftRight,
   FileText, Bell, Settings, Megaphone, Link2,
   Building2, UserPlus, PenSquare, User, MessageSquare,
-  ShieldAlert, Activity
+  ShieldAlert, Activity, Brain, TrendingUp, Grid3x3, Heart, FileSpreadsheet
 } from "lucide-react";
 import {
   Sidebar,
@@ -66,8 +66,16 @@ const sidebarGroups = [
   {
     label: "Risk & Intervention",
     items: [
-      { title: "Risk Analytics", url: "/risk", icon: ShieldAlert, roles: ["ADMIN", "FACULTY"] },
-      { title: "Interventions", url: "/risk/interventions", icon: Activity, roles: ["ADMIN", "FACULTY"] },
+      { title: "Risk Dashboard", url: "/risk", icon: ShieldAlert, roles: ["ADMIN", "FACULTY"] },
+      { title: "At-Risk Students", url: "/risk/at-risk", icon: Users, roles: ["ADMIN", "FACULTY"] },
+      { title: "Intervention Records", url: "/risk/interventions", icon: Activity, roles: ["ADMIN", "FACULTY"] },
+      { title: "AI Insights", url: "/risk/ai-insights", icon: Brain, roles: ["ADMIN", "FACULTY"] },
+      { title: "Risk Trends", url: "/risk/trends", icon: TrendingUp, roles: ["ADMIN", "FACULTY"] },
+      { title: "Alerts & Notifications", url: "/risk/alerts", icon: Bell, roles: ["ADMIN", "FACULTY"] },
+      { title: "Subject Analytics", url: "/risk/subjects", icon: Grid3x3, roles: ["ADMIN", "FACULTY"] },
+      { title: "Performance Tracking", url: "/risk/performance", icon: Activity, roles: ["ADMIN", "FACULTY"] },
+      { title: "Counselling Sessions", url: "/risk/counselling", icon: Heart, roles: ["ADMIN", "FACULTY"] },
+      { title: "Reports Export", url: "/risk/reports", icon: FileSpreadsheet, roles: ["ADMIN", "FACULTY"] },
     ],
   },
   {

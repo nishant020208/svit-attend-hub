@@ -43,6 +43,14 @@ const StudentProfile = lazy(() => import("./pages/StudentProfile"));
 const RiskAnalytics = lazy(() => import("./pages/RiskAnalytics"));
 const Interventions = lazy(() => import("./pages/Interventions"));
 const StudentRiskProfile = lazy(() => import("./pages/StudentRiskProfile"));
+const AtRiskStudents = lazy(() => import("./pages/AtRiskStudents"));
+const RiskAIInsights = lazy(() => import("./pages/RiskAIInsights"));
+const RiskTrends = lazy(() => import("./pages/RiskTrends"));
+const RiskAlerts = lazy(() => import("./pages/RiskAlerts"));
+const SubjectAnalytics = lazy(() => import("./pages/SubjectAnalytics"));
+const PerformanceTracking = lazy(() => import("./pages/PerformanceTracking"));
+const CounsellingSessions = lazy(() => import("./pages/CounsellingSessions"));
+const ReportsExport = lazy(() => import("./pages/ReportsExport"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -99,6 +107,14 @@ const App = () => (
               <Route path="/risk" element={<RiskAnalytics />} />
               <Route path="/risk/interventions" element={<Interventions />} />
               <Route path="/risk/student" element={<StudentRiskProfile />} />
+              <Route path="/risk/at-risk" element={<AtRiskStudents />} />
+              <Route path="/risk/ai-insights" element={<RiskAIInsights />} />
+              <Route path="/risk/trends" element={<RiskTrends />} />
+              <Route path="/risk/alerts" element={<RiskAlerts />} />
+              <Route path="/risk/subjects" element={<SubjectAnalytics />} />
+              <Route path="/risk/performance" element={<PerformanceTracking />} />
+              <Route path="/risk/counselling" element={<CounsellingSessions />} />
+              <Route path="/risk/reports" element={<ReportsExport />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
