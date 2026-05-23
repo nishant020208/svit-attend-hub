@@ -3,14 +3,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Brain, AlertTriangle, TrendingDown, RefreshCw, Sparkles } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Brain, AlertTriangle, TrendingDown, RefreshCw, Sparkles, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Markdown } from "@/components/ui/markdown";
 
 export function AIInsightsPanel() {
   const { toast } = useToast();
   const [insights, setInsights] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatedAt, setGeneratedAt] = useState<Date | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const fetchInsights = async () => {
     setLoading(true);
@@ -20,6 +24,7 @@ export function AIInsightsPanel() {
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
       setInsights(data);
+      setGeneratedAt(new Date());
     } catch (err: any) {
       const msg = err?.message || "Failed to load insights";
       setError(msg);
@@ -74,22 +79,43 @@ export function AIInsightsPanel() {
       {/* Summary */}
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-2">
               <Brain className="h-5 w-5 text-primary" />
               <CardTitle className="text-base text-foreground">AI Insights Summary</CardTitle>
+              {generatedAt && (
+                <span className="text-[10px] text-muted-foreground">
+                  · {generatedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
             </div>
-            <Button variant="ghost" size="sm" onClick={fetchInsights} className="h-7 text-xs gap-1">
-              <RefreshCw className="h-3 w-3" /> Refresh
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(insights.summary ?? "");
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                }}
+              >
+                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copied ? "Copied" : "Copy"}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={fetchInsights} className="h-7 text-xs gap-1">
+                <RefreshCw className="h-3 w-3" /> Regenerate
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="prose prose-sm dark:prose-invert max-w-none text-foreground whitespace-pre-wrap text-sm leading-relaxed">
-            {insights.summary}
-          </div>
+          <ScrollArea className="max-h-80 pr-3">
+            <Markdown>{insights.summary ?? ""}</Markdown>
+          </ScrollArea>
         </CardContent>
       </Card>
+
 
       {/* Alert cards row */}
       <div className="grid md:grid-cols-2 gap-4">

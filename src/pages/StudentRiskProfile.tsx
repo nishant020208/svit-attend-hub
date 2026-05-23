@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RiskBadge } from "@/components/risk/RiskBadge";
 import { LogInterventionDialog } from "@/components/risk/LogInterventionDialog";
+import { Markdown } from "@/components/ui/markdown";
 import {
   Loader2, ShieldAlert, RefreshCw, Sparkles, TrendingDown, BookOpen, Calendar, ArrowLeft,
 } from "lucide-react";
@@ -243,7 +244,7 @@ export default function StudentRiskProfile() {
         </CardHeader>
         <CardContent>
           {aiText ? (
-            <pre className="whitespace-pre-wrap text-sm text-foreground font-sans leading-relaxed">{aiText}</pre>
+            <Markdown>{aiText}</Markdown>
           ) : (
             <p className="text-sm text-muted-foreground">Click Generate to get an AI-powered analysis for this student.</p>
           )}
