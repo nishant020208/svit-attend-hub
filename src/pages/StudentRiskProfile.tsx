@@ -285,41 +285,6 @@ export default function StudentRiskProfile() {
           )}
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base text-foreground flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-primary" /> Intervention Timeline
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {interventions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No interventions logged yet.</p>
-          ) : (
-            <ol className="relative border-l border-border ml-2 space-y-4">
-              {interventions.map((i) => (
-                <li key={i.id} className="ml-4">
-                  <div className="absolute -left-1.5 w-3 h-3 rounded-full bg-primary mt-1.5" />
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline">{i.intervention_type.replace("_", " ")}</Badge>
-                    <Badge>{i.status}</Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(i.created_at), "dd MMM yyyy")}
-                    </span>
-                  </div>
-                  {i.action_taken && <p className="text-sm mt-1 text-foreground">{i.action_taken}</p>}
-                  {i.notes && <p className="text-xs text-muted-foreground mt-1">{i.notes}</p>}
-                  {i.follow_up_date && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Follow-up: {format(new Date(i.follow_up_date), "dd MMM yyyy")}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ol>
-          )}
-        </CardContent>
-      </Card>
     </DashboardLayout>
   );
 }
