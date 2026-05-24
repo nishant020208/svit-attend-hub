@@ -15,6 +15,7 @@ import {
   useTodaySchedule,
   useTeacherPendingLeaves,
 } from "@/hooks/useDashboardQueries";
+import { AutomatedSuggestions } from "@/components/risk/AutomatedSuggestions";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -242,6 +243,10 @@ export default function TeacherDashboard() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        <div className="mb-8">
+          <AutomatedSuggestions limit={5} />
         </div>
 
         {/* Quick Actions */}
