@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { RiskBadge } from "@/components/risk/RiskBadge";
 import { LogInterventionDialog } from "@/components/risk/LogInterventionDialog";
 import { Markdown } from "@/components/ui/markdown";
+import { PredictionConfidence } from "@/components/risk/PredictionConfidence";
+import { StudentTimeline } from "@/components/risk/StudentTimeline";
 import {
-  Loader2, ShieldAlert, RefreshCw, Sparkles, TrendingDown, BookOpen, Calendar, ArrowLeft,
+  Loader2, ShieldAlert, RefreshCw, Sparkles, TrendingDown, BookOpen, ArrowLeft,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
