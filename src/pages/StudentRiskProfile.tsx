@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { RiskBadge } from "@/components/risk/RiskBadge";
 import { LogInterventionDialog } from "@/components/risk/LogInterventionDialog";
 import { Markdown } from "@/components/ui/markdown";
+import { PredictionConfidence } from "@/components/risk/PredictionConfidence";
+import { StudentTimeline } from "@/components/risk/StudentTimeline";
 import {
-  Loader2, ShieldAlert, RefreshCw, Sparkles, TrendingDown, BookOpen, Calendar, ArrowLeft,
+  Loader2, ShieldAlert, RefreshCw, Sparkles, TrendingDown, BookOpen, ArrowLeft,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
@@ -31,6 +33,7 @@ export default function StudentRiskProfile() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [interventions, setInterventions] = useState<any[]>([]);
   const [aiText, setAiText] = useState<string>("");
+  const [aiPrediction, setAiPrediction] = useState<any>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [recomputing, setRecomputing] = useState(false);
 
@@ -95,10 +98,12 @@ export default function StudentRiskProfile() {
   const getAI = async () => {
     setAiLoading(true);
     setAiText("");
+    setAiPrediction(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-mentor-recommendations", { body: { studentId } });
       if (error) throw error;
       setAiText(data?.recommendation || "No recommendation returned.");
+      setAiPrediction(data?.prediction || null);
     } catch (e: any) {
       toast({ title: "AI failed", description: e.message, variant: "destructive" });
     } finally { setAiLoading(false); }
@@ -277,41 +282,6 @@ export default function StudentRiskProfile() {
                 </div>
               ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base text-foreground flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-primary" /> Intervention Timeline
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {interventions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No interventions logged yet.</p>
-          ) : (
-            <ol className="relative border-l border-border ml-2 space-y-4">
-              {interventions.map((i) => (
-                <li key={i.id} className="ml-4">
-                  <div className="absolute -left-1.5 w-3 h-3 rounded-full bg-primary mt-1.5" />
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="outline">{i.intervention_type.replace("_", " ")}</Badge>
-                    <Badge>{i.status}</Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(i.created_at), "dd MMM yyyy")}
-                    </span>
-                  </div>
-                  {i.action_taken && <p className="text-sm mt-1 text-foreground">{i.action_taken}</p>}
-                  {i.notes && <p className="text-xs text-muted-foreground mt-1">{i.notes}</p>}
-                  {i.follow_up_date && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Follow-up: {format(new Date(i.follow_up_date), "dd MMM yyyy")}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ol>
           )}
         </CardContent>
       </Card>
