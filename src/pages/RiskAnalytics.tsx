@@ -296,6 +296,18 @@ export default function RiskAnalytics() {
         </Card>
       </div>
 
+      {heatmap.cells.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base text-foreground">Risk Heatmap · Course × Year</CardTitle>
+            <CardDescription>Average risk score across courses and years</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Heatmap cells={heatmap.cells} rows={heatmap.rows} cols={heatmap.cols} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Table */}
       <Card>
         <CardHeader>
