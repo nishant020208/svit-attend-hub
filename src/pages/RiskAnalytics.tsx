@@ -148,6 +148,27 @@ export default function RiskAnalytics() {
     });
   }, [rows]);
 
+  // Course × Year average risk heatmap
+  const heatmap = useMemo(() => {
+    const map = new Map<string, { sum: number; n: number }>();
+    rows.forEach((r) => {
+      const c = r.student?.course || "—";
+      const y = r.student?.year ? `Y${r.student.year}` : "—";
+      const k = `${c}|${y}`;
+      const prev = map.get(k) || { sum: 0, n: 0 };
+      prev.sum += Number(r.score); prev.n += 1;
+      map.set(k, prev);
+    });
+    const courses = Array.from(new Set(rows.map((r) => r.student?.course || "—"))).sort();
+    const years = Array.from(new Set(rows.map((r) => r.student?.year ? `Y${r.student.year}` : "—"))).sort();
+    const cells: HeatmapCell[] = [];
+    map.forEach((v, k) => {
+      const [row, col] = k.split("|");
+      cells.push({ row, col, value: Math.round(v.sum / v.n) });
+    });
+    return { cells, rows: courses, cols: years };
+  }, [rows]);
+
   return (
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
