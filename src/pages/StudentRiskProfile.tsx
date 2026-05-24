@@ -33,6 +33,7 @@ export default function StudentRiskProfile() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [interventions, setInterventions] = useState<any[]>([]);
   const [aiText, setAiText] = useState<string>("");
+  const [aiPrediction, setAiPrediction] = useState<any>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [recomputing, setRecomputing] = useState(false);
 
@@ -97,10 +98,12 @@ export default function StudentRiskProfile() {
   const getAI = async () => {
     setAiLoading(true);
     setAiText("");
+    setAiPrediction(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-mentor-recommendations", { body: { studentId } });
       if (error) throw error;
       setAiText(data?.recommendation || "No recommendation returned.");
+      setAiPrediction(data?.prediction || null);
     } catch (e: any) {
       toast({ title: "AI failed", description: e.message, variant: "destructive" });
     } finally { setAiLoading(false); }
