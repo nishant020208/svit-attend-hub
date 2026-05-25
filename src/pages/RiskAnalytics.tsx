@@ -258,7 +258,13 @@ export default function RiskAnalytics() {
             Identify at-risk students early using attendance, marks, assignments, and trends.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={handleExportCsv} className="gap-2">
+            <FileDown className="h-4 w-4" /> CSV
+          </Button>
+          <Button variant="outline" onClick={handleExportPdf} className="gap-2">
+            <FileText className="h-4 w-4" /> PDF
+          </Button>
           <Button variant="outline" onClick={async () => {
             try {
               const { error } = await supabase.functions.invoke("risk-alerts-engine", { body: {} });
@@ -276,6 +282,59 @@ export default function RiskAnalytics() {
           </Button>
         </div>
       </div>
+
+      {/* Drill-down filters */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+            <div className="col-span-2 md:col-span-1">
+              <label className="text-xs text-muted-foreground">From</label>
+              <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+            </div>
+            <div className="col-span-2 md:col-span-1">
+              <label className="text-xs text-muted-foreground">To</label>
+              <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Course</label>
+              <Select value={courseFilter} onValueChange={setCourseFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All</SelectItem>
+                  {courses.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Year</label>
+              <Select value={yearFilter} onValueChange={setYearFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All</SelectItem>
+                  {years.map((y) => <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">Level</label>
+              <Select value={levelFilter} onValueChange={setLevelFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All</SelectItem>
+                  <SelectItem value="CRITICAL">Critical</SelectItem>
+                  <SelectItem value="HIGH">High</SelectItem>
+                  <SelectItem value="MEDIUM">Medium</SelectItem>
+                  <SelectItem value="LOW">Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="ghost" onClick={() => { setDateFrom(""); setDateTo(""); setCourseFilter("ALL"); setYearFilter("ALL"); setLevelFilter("ALL"); }}>
+              Reset
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">Showing <span className="font-semibold text-foreground">{filtered.length}</span> of {rows.length} students · {filterSummary}</p>
+        </CardContent>
+      </Card>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
