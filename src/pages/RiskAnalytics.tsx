@@ -444,6 +444,12 @@ export default function RiskAnalytics() {
         </Card>
       )}
 
+      <div className="mb-6">
+        <SemesterDeepDive />
+      </div>
+
+
+
       {/* Table */}
       <Card>
         <CardHeader>
