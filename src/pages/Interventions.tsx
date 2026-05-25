@@ -187,6 +187,40 @@ export default function Interventions() {
         </Dialog>
       </div>
 
+      {/* Success-rate KPI strip */}
+      {(() => {
+        const total = list.length;
+        const closed = list.filter((i) => i.status !== "OPEN").length;
+        const deltas = outcomes.map((o) => Number(o.risk_score_delta)).filter((n) => !isNaN(n));
+        const improved = deltas.filter((d) => d < 0).length;
+        const successRate = deltas.length ? Math.round((improved / deltas.length) * 100) : 0;
+        const avgDrop = deltas.length ? Math.round(-(deltas.reduce((a, b) => a + b, 0) / deltas.length)) : 0;
+        const closeRate = total ? Math.round((closed / total) * 100) : 0;
+        const kpis = [
+          { label: "Total", value: total, icon: Activity, color: "text-primary" },
+          { label: "Closed", value: `${closeRate}%`, icon: CheckCircle2, color: "text-green-600" },
+          { label: "Success Rate", value: `${successRate}%`, icon: Target, color: "text-blue-600" },
+          { label: "Avg Risk Drop", value: `${avgDrop > 0 ? "-" : ""}${Math.abs(avgDrop)} pts`, icon: TrendingDown, color: "text-emerald-600" },
+        ];
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            {kpis.map((k) => (
+              <Card key={k.label}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">{k.label}</p>
+                      <p className="text-2xl font-bold text-foreground">{k.value}</p>
+                    </div>
+                    <k.icon className={`h-7 w-7 ${k.color} opacity-60`} />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        );
+      })()}
+
       <Card>
         <CardHeader><CardTitle className="text-base text-foreground">All Interventions</CardTitle></CardHeader>
         <CardContent>
@@ -204,22 +238,45 @@ export default function Interventions() {
                     <TableHead>Type</TableHead>
                     <TableHead>Action</TableHead>
                     <TableHead>Follow-up</TableHead>
+                    <TableHead>Outcome</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {list.map((i) => (
-                    <TableRow key={i.id}>
-                      <TableCell>{format(new Date(i.created_at), "dd MMM yyyy")}</TableCell>
-                      <TableCell className="font-medium text-foreground">
-                        {i.profile?.name || i.student?.roll_number || "—"}
-                      </TableCell>
-                      <TableCell><Badge variant="outline">{i.intervention_type.replace("_", " ")}</Badge></TableCell>
-                      <TableCell className="max-w-xs truncate">{i.action_taken || "—"}</TableCell>
-                      <TableCell>{i.follow_up_date ? format(new Date(i.follow_up_date), "dd MMM") : "—"}</TableCell>
-                      <TableCell><Badge>{i.status}</Badge></TableCell>
-                    </TableRow>
-                  ))}
+                  {list.map((i) => {
+                    const outs = outcomes.filter((o) => o.intervention_id === i.id);
+                    const delta = outs.length ? Number(outs[0].risk_score_delta) : null;
+                    return (
+                      <TableRow key={i.id}>
+                        <TableCell>{format(new Date(i.created_at), "dd MMM yyyy")}</TableCell>
+                        <TableCell className="font-medium text-foreground">
+                          {i.profile?.name || i.student?.roll_number || "—"}
+                        </TableCell>
+                        <TableCell><Badge variant="outline">{i.intervention_type.replace("_", " ")}</Badge></TableCell>
+                        <TableCell className="max-w-xs truncate">{i.action_taken || "—"}</TableCell>
+                        <TableCell>{i.follow_up_date ? format(new Date(i.follow_up_date), "dd MMM") : "—"}</TableCell>
+                        <TableCell>
+                          {delta === null || isNaN(delta) ? (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          ) : (
+                            <Badge variant={delta < 0 ? "default" : "secondary"} className={delta < 0 ? "bg-green-600" : ""}>
+                              {delta < 0 ? "↓" : "↑"} {Math.abs(delta)} pts
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell><Badge variant={i.status === "OPEN" ? "secondary" : "default"}>{i.status}</Badge></TableCell>
+                        <TableCell>
+                          {i.status === "OPEN" && (
+                            <CloseInterventionDialog
+                              intervention={{ id: i.id, student_id: i.student_id, created_at: i.created_at }}
+                              onSaved={fetchData}
+                            />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
