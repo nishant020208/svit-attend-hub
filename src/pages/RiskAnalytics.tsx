@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { RiskBadge } from "@/components/risk/RiskBadge";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, RefreshCw, ShieldAlert, TrendingDown, AlertTriangle, Users, Search } from "lucide-react";
+import { Loader2, RefreshCw, ShieldAlert, TrendingDown, AlertTriangle, Users, Search, FileDown, FileText } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -20,6 +20,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Heatmap, HeatmapCell } from "@/components/risk/Heatmap";
+import { SemesterDeepDive } from "@/components/risk/SemesterDeepDive";
+import { toCsv } from "@/lib/exportCsv";
+import { exportTablePdf } from "@/lib/exportPdf";
 
 type RiskRow = {
   id: string;
@@ -48,6 +51,10 @@ export default function RiskAnalytics() {
   const [rows, setRows] = useState<RiskRow[]>([]);
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState<string>("ALL");
+  const [courseFilter, setCourseFilter] = useState<string>("ALL");
+  const [yearFilter, setYearFilter] = useState<string>("ALL");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
 
   const fetchAll = async () => {
     setLoading(true);
