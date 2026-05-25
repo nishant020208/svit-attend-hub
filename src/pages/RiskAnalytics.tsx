@@ -116,9 +116,16 @@ export default function RiskAnalytics() {
     }
   };
 
+  const courses = useMemo(() => Array.from(new Set(rows.map((r) => r.student?.course).filter(Boolean))).sort() as string[], [rows]);
+  const years = useMemo(() => Array.from(new Set(rows.map((r) => r.student?.year).filter(Boolean))).sort() as number[], [rows]);
+
   const filtered = useMemo(() => {
     return rows.filter((r) => {
       if (levelFilter !== "ALL" && r.level !== levelFilter) return false;
+      if (courseFilter !== "ALL" && r.student?.course !== courseFilter) return false;
+      if (yearFilter !== "ALL" && String(r.student?.year) !== yearFilter) return false;
+      if (dateFrom && r.computed_at < dateFrom) return false;
+      if (dateTo && r.computed_at > dateTo + "T23:59:59") return false;
       if (search) {
         const q = search.toLowerCase();
         const hay = `${r.profile?.name || ""} ${r.profile?.email || ""} ${r.student?.roll_number || ""}`.toLowerCase();
@@ -126,13 +133,13 @@ export default function RiskAnalytics() {
       }
       return true;
     });
-  }, [rows, levelFilter, search]);
+  }, [rows, levelFilter, courseFilter, yearFilter, dateFrom, dateTo, search]);
 
   const counts = useMemo(() => {
     const c = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 };
-    rows.forEach((r) => { c[r.level]++; });
+    filtered.forEach((r) => { c[r.level]++; });
     return c;
-  }, [rows]);
+  }, [filtered]);
 
   const atRisk = counts.HIGH + counts.CRITICAL;
 
@@ -143,22 +150,19 @@ export default function RiskAnalytics() {
     { name: "Critical", value: counts.CRITICAL, color: LEVEL_COLORS.CRITICAL },
   ].filter((d) => d.value > 0);
 
-  // Factor-average chart (which factor drags students down most)
   const factorAvg = useMemo(() => {
-    if (rows.length === 0) return [];
+    if (filtered.length === 0) return [];
     const keys = ["attendance", "marks", "assignments", "trend", "lateSubs", "leaveFreq"];
     return keys.map((k) => {
-      const vals = rows.map((r) => (r.factors?.[k] ?? 0) as number);
+      const vals = filtered.map((r) => (r.factors?.[k] ?? 0) as number);
       const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-      // convert to "risk contribution" %
       return { factor: k, risk: Math.round((1 - avg) * 100) };
     });
-  }, [rows]);
+  }, [filtered]);
 
-  // Course × Year average risk heatmap
   const heatmap = useMemo(() => {
     const map = new Map<string, { sum: number; n: number }>();
-    rows.forEach((r) => {
+    filtered.forEach((r) => {
       const c = r.student?.course || "—";
       const y = r.student?.year ? `Y${r.student.year}` : "—";
       const k = `${c}|${y}`;
@@ -166,15 +170,81 @@ export default function RiskAnalytics() {
       prev.sum += Number(r.score); prev.n += 1;
       map.set(k, prev);
     });
-    const courses = Array.from(new Set(rows.map((r) => r.student?.course || "—"))).sort();
-    const years = Array.from(new Set(rows.map((r) => r.student?.year ? `Y${r.student.year}` : "—"))).sort();
+    const cs = Array.from(new Set(filtered.map((r) => r.student?.course || "—"))).sort();
+    const ys = Array.from(new Set(filtered.map((r) => r.student?.year ? `Y${r.student.year}` : "—"))).sort();
     const cells: HeatmapCell[] = [];
     map.forEach((v, k) => {
       const [row, col] = k.split("|");
       cells.push({ row, col, value: Math.round(v.sum / v.n) });
     });
-    return { cells, rows: courses, cols: years };
-  }, [rows]);
+    return { cells, rows: cs, cols: ys };
+  }, [filtered]);
+
+  const filterSummary = [
+    dateFrom || dateTo ? `${dateFrom || "…"} → ${dateTo || "…"}` : null,
+    courseFilter !== "ALL" ? `Course: ${courseFilter}` : null,
+    yearFilter !== "ALL" ? `Year: ${yearFilter}` : null,
+    levelFilter !== "ALL" ? `Level: ${levelFilter}` : null,
+  ].filter(Boolean).join(" · ") || "All students";
+
+  const handleExportCsv = () => {
+    if (!filtered.length) {
+      toast({ title: "Nothing to export", variant: "destructive" });
+      return;
+    }
+    const rowsOut = filtered.map((r) => ({
+      name: r.profile?.name || "",
+      email: r.profile?.email || "",
+      roll: r.student?.roll_number || "",
+      course: r.student?.course || "",
+      year: r.student?.year || "",
+      section: r.student?.section || "",
+      level: r.level,
+      score: r.score,
+      reasons: r.reasons.join(" | "),
+      computed_at: r.computed_at,
+    }));
+    toCsv(rowsOut, `risk-analytics-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
+  const handleExportPdf = () => {
+    if (!filtered.length) {
+      toast({ title: "Nothing to export", variant: "destructive" });
+      return;
+    }
+    const heatRows = heatmap.rows.map((course) => [
+      course,
+      ...heatmap.cols.map((yr) => {
+        const cell = heatmap.cells.find((c) => c.row === course && c.col === yr);
+        return cell ? cell.value : "—";
+      }),
+    ]);
+    exportTablePdf({
+      title: "Risk Heatmap · Course × Year",
+      subtitle: filterSummary,
+      columns: ["Course", ...heatmap.cols],
+      rows: heatRows as any,
+      filename: `risk-heatmap-${new Date().toISOString().slice(0, 10)}.pdf`,
+    });
+    setTimeout(() => {
+      exportTablePdf({
+        title: "At-Risk Students",
+        subtitle: filterSummary,
+        columns: ["Name", "Roll", "Course", "Year", "Level", "Score", "Top Reasons"],
+        rows: filtered.map((r) => [
+          r.profile?.name || "—",
+          r.student?.roll_number || "—",
+          r.student?.course || "—",
+          r.student?.year ?? "—",
+          r.level,
+          r.score,
+          r.reasons.slice(0, 2).join("; "),
+        ]),
+        filename: `risk-students-${new Date().toISOString().slice(0, 10)}.pdf`,
+      });
+    }, 300);
+  };
+
 
   return (
     <DashboardLayout>
