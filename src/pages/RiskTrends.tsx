@@ -62,12 +62,27 @@ export default function RiskTrends() {
     return Array.from(buckets.values()).map((b) => ({ ...b, avg: b.n ? Math.round(b.avg / b.n) : 0 })).slice(-8);
   }, [history]);
 
+  const semester = useMemo(() => {
+    const map = new Map<string, { period: string; avg: number; n: number; high: number }>();
+    history.forEach((h: any) => {
+      const d = new Date(h.snapshot_date);
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+      if (!map.has(key)) map.set(key, { period: key, avg: 0, n: 0, high: 0 });
+      const b = map.get(key)!;
+      b.avg += Number(h.score); b.n++;
+      if (h.level === "HIGH" || h.level === "CRITICAL") b.high++;
+    });
+    return Array.from(map.values()).map((b) => ({ ...b, avg: b.n ? Math.round(b.avg / b.n) : 0 })).sort((a, b) => a.period.localeCompare(b.period));
+  }, [history]);
+
   return (
     <DashboardLayout>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><TrendingUp className="h-6 w-6 text-primary" />Risk Trends</h1>
         <p className="text-sm text-muted-foreground">Cohort risk evolution over time.</p>
       </div>
+
+      <div className="mb-4"><SuccessKPIs /></div>
 
       {loading ? <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       : !history.length ? <Card><CardContent className="py-10 text-center text-muted-foreground">No history yet. Run Recompute on Risk Analytics.</CardContent></Card>
