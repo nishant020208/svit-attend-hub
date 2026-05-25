@@ -8,14 +8,27 @@ import { TrendingUp, Loader2 } from "lucide-react";
 export default function RiskTrends() {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<any[]>([]);
+  const [factorAvgs, setFactorAvgs] = useState<any[]>([]);
 
   useEffect(() => { (async () => {
     setLoading(true);
     const { data } = await supabase.from("risk_factors_history")
-      .select("snapshot_date, level, score")
-      .gte("snapshot_date", new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString().slice(0, 10))
+      .select("snapshot_date, level, score, factors")
+      .gte("snapshot_date", new Date(Date.now() - 180 * 24 * 3600 * 1000).toISOString().slice(0, 10))
       .order("snapshot_date");
     setHistory(data || []);
+    const recent = (data || []).slice(-200);
+    const sums: Record<string, { sum: number; n: number }> = {};
+    recent.forEach((h: any) => {
+      const f = h.factors || {};
+      Object.keys(f).forEach((k) => {
+        const v = Number(f[k]);
+        if (isNaN(v)) return;
+        if (!sums[k]) sums[k] = { sum: 0, n: 0 };
+        sums[k].sum += v; sums[k].n++;
+      });
+    });
+    setFactorAvgs(Object.entries(sums).map(([factor, s]) => ({ factor, value: Math.round(s.sum / s.n) })));
     setLoading(false);
   })(); }, []);
 
