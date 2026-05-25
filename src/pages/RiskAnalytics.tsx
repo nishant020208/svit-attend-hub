@@ -464,18 +464,6 @@ export default function RiskAnalytics() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Select value={levelFilter} onValueChange={setLevelFilter}>
-              <SelectTrigger className="sm:w-44">
-                <SelectValue placeholder="All severities" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All severities</SelectItem>
-                <SelectItem value="CRITICAL">Critical</SelectItem>
-                <SelectItem value="HIGH">High</SelectItem>
-                <SelectItem value="MEDIUM">Medium</SelectItem>
-                <SelectItem value="LOW">Low</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardHeader>
         <CardContent>
