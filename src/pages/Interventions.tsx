@@ -18,8 +18,9 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Activity, Plus, Loader2 } from "lucide-react";
+import { Activity, Plus, Loader2, TrendingDown, Target, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
+import { CloseInterventionDialog } from "@/components/risk/CloseInterventionDialog";
 
 const TYPES = ["counselling", "parent_meeting", "remedial", "extension", "warning", "mentoring"];
 
@@ -27,6 +28,7 @@ export default function Interventions() {
   const { toast } = useToast();
   const [list, setList] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
+  const [outcomes, setOutcomes] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -83,6 +85,9 @@ export default function Interventions() {
     setStudents(
       (allStu || []).map((s: any) => ({ ...s, profile: allPMap.get(s.user_id) }))
     );
+
+    const { data: outs } = await supabase.from("intervention_outcomes").select("*");
+    setOutcomes(outs || []);
 
     setLoading(false);
   };
