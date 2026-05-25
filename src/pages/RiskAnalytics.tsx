@@ -342,8 +342,8 @@ export default function RiskAnalytics() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Total Students</p>
-                <p className="text-2xl font-bold text-foreground">{rows.length}</p>
+                <p className="text-xs text-muted-foreground">Students (filtered)</p>
+                <p className="text-2xl font-bold text-foreground">{filtered.length}</p>
               </div>
               <Users className="h-8 w-8 text-muted-foreground/40" />
             </div>
@@ -377,7 +377,7 @@ export default function RiskAnalytics() {
               <div>
                 <p className="text-xs text-muted-foreground">Declining Trend</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {rows.filter((r) => (r.factors?.trend ?? 1) < 0.5).length}
+                  {filtered.filter((r) => (r.factors?.trend ?? 1) < 0.5).length}
                 </p>
               </div>
               <TrendingDown className="h-8 w-8 text-yellow-500/40" />
