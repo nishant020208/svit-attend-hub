@@ -16,6 +16,7 @@ import {
   useTeacherPendingLeaves,
 } from "@/hooks/useDashboardQueries";
 import { AutomatedSuggestions } from "@/components/risk/AutomatedSuggestions";
+import { MentorWorkloadCard } from "@/components/risk/MentorWorkloadCard";
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -246,8 +247,13 @@ export default function TeacherDashboard() {
         </div>
 
         <div className="mb-8">
+          <MentorWorkloadCard facultyId={userId} />
+        </div>
+
+        <div className="mb-8">
           <AutomatedSuggestions limit={5} />
         </div>
+
 
         {/* Quick Actions */}
         <Card className="shadow-lg">
