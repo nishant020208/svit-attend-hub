@@ -135,6 +135,36 @@ export default function RiskTrends() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Semester Deep-Dive</CardTitle><CardDescription>Monthly average risk score</CardDescription></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={semester}>
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis dataKey="period" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+                <Tooltip />
+                <Legend />
+                <Line dataKey="avg" stroke="hsl(var(--primary))" strokeWidth={2} name="Avg Score" />
+                <Line dataKey="high" stroke="hsl(0 84% 60%)" strokeWidth={2} name="High/Critical" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-base">Risk Factor Breakdown</CardTitle><CardDescription>Average contribution per factor</CardDescription></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <RadarChart data={factorAvgs}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="factor" tick={{ fontSize: 11 }} />
+                <PolarRadiusAxis tick={{ fontSize: 10 }} />
+                <Radar dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.4} />
+                <Tooltip />
+              </RadarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>}
     </DashboardLayout>
   );
