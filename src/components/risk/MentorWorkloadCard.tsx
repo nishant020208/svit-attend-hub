@@ -139,6 +139,7 @@ export function MentorWorkloadCard({ facultyId, capacity = 15 }: Props) {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
