@@ -17,22 +17,37 @@ interface TopTabsProps {
 }
 
 const tabs = [
-  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
+  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT", "LIBRARIAN"] },
   { name: "Attendance", path: "/attendance", icon: ClipboardCheck, roles: ["ADMIN", "FACULTY", "STUDENT"] },
   { name: "QR Attendance", path: "/attendance-qr", icon: ClipboardCheck, roles: ["ADMIN", "FACULTY", "STUDENT"] },
   { name: "Leave", path: "/leave", icon: FileText, roles: ["ADMIN", "FACULTY", "STUDENT"] },
   { name: "Timetable", path: "/timetable", icon: Calendar, roles: ["ADMIN", "FACULTY", "STUDENT"] },
+  { name: "Homework", path: "/homework", icon: PenSquare, roles: ["FACULTY", "STUDENT"] },
   { name: "Results", path: "/results", icon: GraduationCap, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
   { name: "Announcements", path: "/announcements", icon: Megaphone, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
   { name: "Reports", path: "/reports", icon: FileText, roles: ["ADMIN", "FACULTY"] },
   { name: "Notifications", path: "/notifications", icon: Bell, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
+  { name: "Feedback", path: "/feedback", icon: MessageSquare, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT"] },
   { name: "Library", path: "/library", icon: Library, roles: ["STUDENT", "LIBRARIAN", "ADMIN"] },
   { name: "Book Return", path: "/book-return", icon: ArrowLeftRight, roles: ["STUDENT", "LIBRARIAN", "ADMIN"] },
   { name: "Librarian Dashboard", path: "/librarian-dashboard", icon: LayoutDashboard, roles: ["LIBRARIAN"] },
   { name: "Students", path: "/students", icon: Users, roles: ["ADMIN"] },
   { name: "Parent Links", path: "/parent-links", icon: Link2, roles: ["ADMIN"] },
+  { name: "Student Assign", path: "/student-assign", icon: UserPlus, roles: ["ADMIN"] },
   { name: "Courses", path: "/courses", icon: BookOpen, roles: ["ADMIN"] },
   { name: "Subjects", path: "/subjects", icon: Layers, roles: ["ADMIN"] },
+  { name: "Course Structure", path: "/course-structure", icon: Building2, roles: ["ADMIN"] },
+  // Risk & Intervention
+  { name: "Risk Dashboard", path: "/risk", icon: ShieldAlert, roles: ["ADMIN", "FACULTY"] },
+  { name: "At-Risk Students", path: "/risk/at-risk", icon: Users, roles: ["ADMIN", "FACULTY"] },
+  { name: "Intervention Records", path: "/risk/interventions", icon: Activity, roles: ["ADMIN", "FACULTY"] },
+  { name: "AI Insights", path: "/risk/ai-insights", icon: Brain, roles: ["ADMIN", "FACULTY"] },
+  { name: "Risk Trends", path: "/risk/trends", icon: TrendingUp, roles: ["ADMIN", "FACULTY"] },
+  { name: "Risk Alerts", path: "/risk/alerts", icon: Bell, roles: ["ADMIN", "FACULTY"] },
+  { name: "Subject Analytics", path: "/risk/subjects", icon: Grid3x3, roles: ["ADMIN", "FACULTY"] },
+  { name: "Performance Tracking", path: "/risk/performance", icon: Activity, roles: ["ADMIN", "FACULTY"] },
+  { name: "Counselling Sessions", path: "/risk/counselling", icon: Heart, roles: ["ADMIN", "FACULTY"] },
+  { name: "Reports Export", path: "/risk/reports", icon: FileSpreadsheet, roles: ["ADMIN", "FACULTY"] },
   { name: "Settings", path: "/settings", icon: Settings, roles: ["ADMIN", "FACULTY", "STUDENT", "PARENT", "LIBRARIAN"] },
 ];
 
