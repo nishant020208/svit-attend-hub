@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, ClipboardList, Loader2 } from "lucide-react";
+import { Users, ClipboardList, Loader2, FileDown, FileText } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
+import { toCsv } from "@/lib/exportCsv";
+import { exportTablePdf } from "@/lib/exportPdf";
 
 interface Props {
   facultyId?: string;
