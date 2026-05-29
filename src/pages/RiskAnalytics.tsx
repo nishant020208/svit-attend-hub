@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Heatmap, HeatmapCell } from "@/components/risk/Heatmap";
 import { SemesterDeepDive } from "@/components/risk/SemesterDeepDive";
+import { FilterPresets, RiskPreset } from "@/components/risk/FilterPresets";
 import { toCsv } from "@/lib/exportCsv";
 import { exportTablePdf } from "@/lib/exportPdf";
 
@@ -228,21 +229,39 @@ export default function RiskAnalytics() {
     });
     setTimeout(() => {
       exportTablePdf({
-        title: "At-Risk Students",
-        subtitle: filterSummary,
-        columns: ["Name", "Roll", "Course", "Year", "Level", "Score", "Top Reasons"],
+        title: "At-Risk Students (Filtered)",
+        subtitle: `${filterSummary} · ${filtered.length} students`,
+        columns: ["Name", "Email", "Roll", "Course", "Year", "Section", "Level", "Score", "Top Reasons", "Computed"],
         rows: filtered.map((r) => [
           r.profile?.name || "—",
+          r.profile?.email || "—",
           r.student?.roll_number || "—",
           r.student?.course || "—",
           r.student?.year ?? "—",
+          r.student?.section || "—",
           r.level,
           r.score,
-          r.reasons.slice(0, 2).join("; "),
+          r.reasons.slice(0, 3).join("; "),
+          r.computed_at?.slice(0, 10) || "—",
         ]),
         filename: `risk-students-${new Date().toISOString().slice(0, 10)}.pdf`,
       });
     }, 300);
+  };
+
+  const applyPreset = (p: RiskPreset) => {
+    setDateFrom(p.dateFrom); setDateTo(p.dateTo);
+    setCourseFilter(p.course); setYearFilter(p.year); setLevelFilter(p.level);
+    toast({ title: "Preset applied", description: p.name });
+  };
+
+  const handleHeatmapDrill = (cell: { row: string; col: string }) => {
+    setCourseFilter(cell.row);
+    setYearFilter(cell.col.replace(/^Y/, ""));
+    toast({ title: "Drill-down applied", description: `${cell.row} · ${cell.col} — scroll to table` });
+    setTimeout(() => {
+      document.getElementById("risk-students-table")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   };
 
 
@@ -258,7 +277,11 @@ export default function RiskAnalytics() {
             Identify at-risk students early using attendance, marks, assignments, and trends.
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          <FilterPresets
+            current={{ dateFrom, dateTo, course: courseFilter, year: yearFilter, level: levelFilter }}
+            onApply={applyPreset}
+          />
           <Button variant="outline" onClick={handleExportCsv} className="gap-2">
             <FileDown className="h-4 w-4" /> CSV
           </Button>
@@ -436,10 +459,10 @@ export default function RiskAnalytics() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-base text-foreground">Risk Heatmap · Course × Year</CardTitle>
-            <CardDescription>Average risk score across courses and years</CardDescription>
+            <CardDescription>Average risk score across courses and years. Click any cell to drill down into the matching students.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Heatmap cells={heatmap.cells} rows={heatmap.rows} cols={heatmap.cols} />
+            <Heatmap cells={heatmap.cells} rows={heatmap.rows} cols={heatmap.cols} onCellClick={handleHeatmapDrill} />
           </CardContent>
         </Card>
       )}
@@ -451,7 +474,7 @@ export default function RiskAnalytics() {
 
 
       {/* Table */}
-      <Card>
+      <Card id="risk-students-table">
         <CardHeader>
           <CardTitle className="text-base text-foreground">At-Risk Students</CardTitle>
           <div className="flex flex-col sm:flex-row gap-2 mt-2">
