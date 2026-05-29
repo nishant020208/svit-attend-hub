@@ -21,7 +21,7 @@ function color(v: number) {
   return "bg-green-500/80 text-white";
 }
 
-export function Heatmap({ cells, rows, cols, formatValue }: Props) {
+export function Heatmap({ cells, rows, cols, formatValue, onCellClick }: Props) {
   const map = new Map(cells.map((c) => [`${c.row}|${c.col}`, c.value]));
   return (
     <div className="overflow-x-auto">
@@ -42,17 +42,22 @@ export function Heatmap({ cells, rows, cols, formatValue }: Props) {
               <td className="text-right pr-2 py-1 font-medium text-foreground whitespace-nowrap">{r}</td>
               {cols.map((c) => {
                 const v = map.get(`${r}|${c}`);
+                const clickable = v !== undefined && !!onCellClick;
                 return (
                   <td key={c} className="p-0">
-                    <div
+                    <button
+                      type="button"
+                      disabled={!clickable}
+                      onClick={() => clickable && onCellClick!({ row: r, col: c, value: v! })}
                       className={cn(
-                        "min-w-12 h-9 rounded-md flex items-center justify-center text-[11px] font-semibold transition-transform hover:scale-105",
-                        v === undefined ? "bg-muted/40 text-muted-foreground" : color(v)
+                        "min-w-12 h-9 rounded-md flex items-center justify-center text-[11px] font-semibold transition-transform hover:scale-105 w-full",
+                        v === undefined ? "bg-muted/40 text-muted-foreground cursor-default" : color(v),
+                        clickable && "cursor-pointer hover:ring-2 hover:ring-primary/60"
                       )}
-                      title={v === undefined ? "no data" : `${r} · ${c}: ${v}`}
+                      title={v === undefined ? "no data" : clickable ? `Drill down · ${r} · ${c}: ${v}` : `${r} · ${c}: ${v}`}
                     >
                       {v === undefined ? "–" : formatValue ? formatValue(v) : Math.round(v)}
-                    </div>
+                    </button>
                   </td>
                 );
               })}
