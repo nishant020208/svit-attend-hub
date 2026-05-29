@@ -229,21 +229,39 @@ export default function RiskAnalytics() {
     });
     setTimeout(() => {
       exportTablePdf({
-        title: "At-Risk Students",
-        subtitle: filterSummary,
-        columns: ["Name", "Roll", "Course", "Year", "Level", "Score", "Top Reasons"],
+        title: "At-Risk Students (Filtered)",
+        subtitle: `${filterSummary} · ${filtered.length} students`,
+        columns: ["Name", "Email", "Roll", "Course", "Year", "Section", "Level", "Score", "Top Reasons", "Computed"],
         rows: filtered.map((r) => [
           r.profile?.name || "—",
+          r.profile?.email || "—",
           r.student?.roll_number || "—",
           r.student?.course || "—",
           r.student?.year ?? "—",
+          r.student?.section || "—",
           r.level,
           r.score,
-          r.reasons.slice(0, 2).join("; "),
+          r.reasons.slice(0, 3).join("; "),
+          r.computed_at?.slice(0, 10) || "—",
         ]),
         filename: `risk-students-${new Date().toISOString().slice(0, 10)}.pdf`,
       });
     }, 300);
+  };
+
+  const applyPreset = (p: RiskPreset) => {
+    setDateFrom(p.dateFrom); setDateTo(p.dateTo);
+    setCourseFilter(p.course); setYearFilter(p.year); setLevelFilter(p.level);
+    toast({ title: "Preset applied", description: p.name });
+  };
+
+  const handleHeatmapDrill = (cell: { row: string; col: string }) => {
+    setCourseFilter(cell.row);
+    setYearFilter(cell.col.replace(/^Y/, ""));
+    toast({ title: "Drill-down applied", description: `${cell.row} · ${cell.col} — scroll to table` });
+    setTimeout(() => {
+      document.getElementById("risk-students-table")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   };
 
 
