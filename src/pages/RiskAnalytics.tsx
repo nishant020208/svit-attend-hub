@@ -277,7 +277,11 @@ export default function RiskAnalytics() {
             Identify at-risk students early using attendance, marks, assignments, and trends.
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          <FilterPresets
+            current={{ dateFrom, dateTo, course: courseFilter, year: yearFilter, level: levelFilter }}
+            onApply={applyPreset}
+          />
           <Button variant="outline" onClick={handleExportCsv} className="gap-2">
             <FileDown className="h-4 w-4" /> CSV
           </Button>
