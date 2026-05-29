@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut, GraduationCap, Bell, Users, Link2, BookOpen, Layers, Eye, Home, User, Shield, Library, ArrowLeftRight } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Calendar, Megaphone, FileText, Settings, LogOut, GraduationCap, Bell, Users, Link2, BookOpen, Layers, Eye, Home, User, Shield, Library, ArrowLeftRight, ShieldAlert, Activity, Brain, TrendingUp, Grid3x3, Heart, FileSpreadsheet, PenSquare, MessageSquare, Building2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from "@/components/ui/dropdown-menu";
