@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Heatmap, HeatmapCell } from "@/components/risk/Heatmap";
 import { SemesterDeepDive } from "@/components/risk/SemesterDeepDive";
+import { FilterPresets, RiskPreset } from "@/components/risk/FilterPresets";
 import { toCsv } from "@/lib/exportCsv";
 import { exportTablePdf } from "@/lib/exportPdf";
 
