@@ -459,10 +459,10 @@ export default function RiskAnalytics() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-base text-foreground">Risk Heatmap · Course × Year</CardTitle>
-            <CardDescription>Average risk score across courses and years</CardDescription>
+            <CardDescription>Average risk score across courses and years. Click any cell to drill down into the matching students.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Heatmap cells={heatmap.cells} rows={heatmap.rows} cols={heatmap.cols} />
+            <Heatmap cells={heatmap.cells} rows={heatmap.rows} cols={heatmap.cols} onCellClick={handleHeatmapDrill} />
           </CardContent>
         </Card>
       )}
@@ -474,7 +474,7 @@ export default function RiskAnalytics() {
 
 
       {/* Table */}
-      <Card>
+      <Card id="risk-students-table">
         <CardHeader>
           <CardTitle className="text-base text-foreground">At-Risk Students</CardTitle>
           <div className="flex flex-col sm:flex-row gap-2 mt-2">
