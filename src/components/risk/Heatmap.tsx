@@ -11,6 +11,7 @@ interface Props {
   rows: string[];
   cols: string[];
   formatValue?: (v: number) => string;
+  onCellClick?: (cell: { row: string; col: string; value: number }) => void;
 }
 
 function color(v: number) {
