@@ -384,6 +384,25 @@ export default function Homework() {
     }
   };
 
+  const openHomeworkFile = async (pathOrUrl: string) => {
+    // Legacy rows may have full public URLs; extract just the object path
+    let path = pathOrUrl;
+    const marker = "/object/public/homework/";
+    const idx = pathOrUrl.indexOf(marker);
+    if (idx !== -1) path = pathOrUrl.substring(idx + marker.length);
+    const signMarker = "/object/sign/homework/";
+    const sidx = path.indexOf(signMarker);
+    if (sidx !== -1) path = path.substring(sidx + signMarker.length).split("?")[0];
+
+    const { data, error } = await supabase.storage.from("homework").createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) {
+      toast({ title: "Error", description: "Failed to open file", variant: "destructive" });
+      return;
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
+
+
   const getSubmissionStatus = (homeworkId: string) => {
     const submission = submissions.find((s) => s.homework_id === homeworkId);
     if (!submission) return { status: "pending", submission: null };
