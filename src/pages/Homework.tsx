@@ -623,11 +623,16 @@ export default function Homework() {
                       {submission?.file_url && (
                         <div className="flex items-center gap-2 mb-4">
                           <FileText className="h-4 w-4" />
-                          <a href={submission.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm">
+                          <button
+                            type="button"
+                            onClick={() => openHomeworkFile(submission.file_url!)}
+                            className="text-primary hover:underline text-sm"
+                          >
                             {submission.file_name || "View Submission"}
-                          </a>
+                          </button>
                         </div>
                       )}
+
 
                       {status !== "graded" && (
                         <Dialog open={submissionDialogOpen && selectedHomework?.id === hw.id} onOpenChange={(open) => {
@@ -769,14 +774,23 @@ export default function Homework() {
                           {sub.file_url && (
                             <div className="flex items-center gap-2">
                               <FileText className="h-4 w-4" />
-                              <a href={sub.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                              <button
+                                type="button"
+                                onClick={() => openHomeworkFile(sub.file_url)}
+                                className="text-primary hover:underline"
+                              >
                                 {sub.file_name || "View File"} ({sub.file_type})
-                              </a>
-                              <a href={sub.file_url} download className="ml-2">
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openHomeworkFile(sub.file_url)}
+                                className="ml-2"
+                              >
                                 <Download className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                              </a>
+                              </button>
                             </div>
                           )}
+
 
                           {sub.status !== "graded" && (
                             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
