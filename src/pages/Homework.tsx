@@ -283,17 +283,20 @@ export default function Homework() {
 
     try {
       const fileExt = file.name.split(".").pop();
-      const fileName = `${studentId}/${homeworkId}/${Date.now()}.${fileExt}`;
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error("Not authenticated");
+      // Path prefixed with auth uid so storage RLS can verify ownership
+      const fileName = `${authUser.id}/${homeworkId}/${Date.now()}.${fileExt}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("homework")
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("homework")
-        .getPublicUrl(fileName);
+      // Bucket is private now: store the object path, resolve to signed URL on download
+      const urlData = { publicUrl: fileName };
+
 
       // Check if submission exists
       const { data: existing } = await supabase

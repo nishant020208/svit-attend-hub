@@ -128,7 +128,9 @@ export default function LeaveManagement() {
       let attachmentUrl = null;
       if (leaveFile) {
         const fileExt = leaveFile.name.split('.').pop();
-        const fileName = `${Date.now()}_${studentId}.${fileExt}`;
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) throw new Error('Not authenticated');
+        const fileName = `${authUser.id}/${Date.now()}_${studentId}.${fileExt}`;
         const { error: uploadError } = await supabase.storage.from('leave-attachments').upload(fileName, leaveFile);
         if (uploadError) throw uploadError;
         attachmentUrl = fileName;
