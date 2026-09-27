@@ -11,12 +11,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import LibrarianDashboard from "./pages/LibrarianDashboard";
 
-// Lazy load other pages for faster initial load
-const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
-const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
-const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+// Lazy load pages for fast initial load
 const Attendance = lazy(() => import("./pages/Attendance"));
 const AttendanceQR = lazy(() => import("./pages/AttendanceQR"));
 const LeaveManagement = lazy(() => import("./pages/LeaveManagement"));
@@ -33,7 +30,6 @@ const AboutUs = lazy(() => import("./pages/AboutUs"));
 const Install = lazy(() => import("./pages/Install"));
 const ParentLinks = lazy(() => import("./pages/ParentLinks"));
 const LibraryQR = lazy(() => import("./pages/LibraryQR"));
-const LibrarianDashboard = lazy(() => import("./pages/LibrarianDashboard"));
 const BookReturn = lazy(() => import("./pages/BookReturn"));
 const Homework = lazy(() => import("./pages/Homework"));
 const CourseStructure = lazy(() => import("./pages/CourseStructure"));
@@ -115,7 +111,6 @@ const App = () => (
               <Route path="/risk/performance" element={<PerformanceTracking />} />
               <Route path="/risk/counselling" element={<CounsellingSessions />} />
               <Route path="/risk/reports" element={<ReportsExport />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

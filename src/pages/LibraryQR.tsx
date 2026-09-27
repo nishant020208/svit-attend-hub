@@ -76,10 +76,14 @@ export default function LibraryQR() {
     if (html5QrCodeRef.current) {
       try {
         await html5QrCodeRef.current.stop();
-      } catch (e) {}
+      } catch {
+        // Scanner was already stopped or not running
+      }
       try {
         html5QrCodeRef.current.clear();
-      } catch (e) {}
+      } catch {
+        // Scanner element was already cleared
+      }
       html5QrCodeRef.current = null;
     }
   };

@@ -1,21 +1,19 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
   },
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["svit-favicon.jpg", "svit-logo-official.jpg"],
+      includeAssets: ["svit-favicon.jpg", "svit-logo-official.jpg", "svit-logo.png"],
       manifest: {
         name: "SVIT ERP - Attendance Management",
         short_name: "SVIT ERP",
@@ -82,11 +80,21 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
-          ui: ["@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-tabs"],
+          vendor: ["react", "react-dom", "react-router-dom", "@tanstack/react-query"],
+          three: ["three", "@react-three/fiber", "@react-three/drei"],
+          pdf: ["jspdf", "jspdf-autotable"],
+          ui: [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-select"
+          ],
           charts: ["recharts"],
           qr: ["html5-qrcode", "qrcode.react"]
         }

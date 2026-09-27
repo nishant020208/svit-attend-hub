@@ -52,12 +52,12 @@ export default function AboutUs() {
             </div>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent mb-2">
-            Nishant shah 
+            SVIT Attend Hub
           </h1>
-          <p className="text-sm text-muted-foreground">( Version 1.0.23 )</p>
+          <p className="text-sm text-muted-foreground">Version 1.0.0 • Engineered by Nishant Shah</p>
         </div>
 
-        {/* Sapphire Software Solution Card */}
+        {/* Development & Assistance Card */}
         <Card className="mb-6 shadow-premium border-primary/20">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -65,29 +65,27 @@ export default function AboutUs() {
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-foreground">NISHATT SOFTWARE  </h2>
-                <p className="text-sm text-muted-foreground">Software Solutions Provider</p>
+                <h2 className="text-xl font-bold text-foreground">Technical Support & Development</h2>
+                <p className="text-sm text-muted-foreground">Lead Developer: Nishant Shah</p>
               </div>
             </div>
 
             <div className="space-y-3 text-sm">
-              <p className="text-foreground leading-relaxed">​<br />
+              <p className="text-foreground leading-relaxed">
                 Ahmedabad-380060, Gujarat, India.
               </p>
 
               <div className="flex items-center gap-2 text-primary">
                 <Phone className="w-4 h-4" />
                 <span className="font-medium">Contact No.:</span>
-                <span>7862859996(only for technical assistance)</span>
+                <span>+91 7862859996 (Technical Assistance)</span>
               </div>
 
               <div className="flex items-center gap-2 text-primary">
                 <Mail className="w-4 h-4" />
                 <span className="font-medium">E-mail:</span>
-                <a href="mailto:support@vidyalayaschoolsoftware.com" className="hover:underline">nishu0202081@gmail.com</a>
+                <a href="mailto:nishu0202081@gmail.com" className="hover:underline">nishu0202081@gmail.com</a>
               </div>
-
-              
             </div>
           </CardContent>
         </Card>
@@ -143,8 +141,8 @@ export default function AboutUs() {
               <div className="flex items-start gap-3">
                 <Building2 className="w-5 h-5 text-primary mt-0.5" />
                 <div>
-                  <p className="font-medium text-foreground">sardar vallabhbhai patel institute of technology          </p>
-                  <p className="text-muted-foreground">VASAD</p>
+                  <p className="font-medium text-foreground">Sardar Vallabhbhai Patel Institute of Technology (SVIT)</p>
+                  <p className="text-muted-foreground">Vasad, Gujarat, India</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
