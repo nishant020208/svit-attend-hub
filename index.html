@@ -3,9 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>SVIT ERP - Attendance Management System</title>
-    <meta name="description" content="Sardar Vallabhbhai Patel Institute of Technology - Enterprise Attendance Management System for Students, Teachers, Parents and Administrators" />
-    <meta name="author" content="SVIT" />
+    <title>SVIT Attend Hub - College Attendance Management System</title>
+    <meta name="description" content="Sardar Vallabhbhai Patel Institute of Technology - Enterprise Attendance Management System for Students, Teachers, Parents and Administrators." />
+    <meta name="author" content="Sardar Vallabhbhai Patel Institute of Technology" />
+    <link rel="canonical" href="https://svit-attend-hub.vercel.app/" />
     <link rel="icon" href="/svit-favicon.jpg" type="image/jpeg" />
     <link rel="apple-touch-icon" href="/svit-favicon.jpg" />
     
@@ -16,11 +17,53 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="SVIT ERP" />
 
-    <meta property="og:title" content="SVIT ERP Attendance System" />
-    <meta property="og:description" content="Sardar Vallabhbhai Patel Institute of Technology - Enterprise Attendance Management System" />
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://svit-attend-hub.vercel.app/" />
+    <meta property="og:title" content="SVIT Attend Hub - College Attendance Management System" />
+    <meta property="og:description" content="Sardar Vallabhbhai Patel Institute of Technology - Enterprise Attendance Management System for Students, Teachers, Parents and Administrators." />
+    <meta property="og:image" content="https://svit-attend-hub.vercel.app/svit-logo-official.jpg" />
+    <meta property="og:site_name" content="SVIT Attend Hub" />
 
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://svit-attend-hub.vercel.app/" />
+    <meta name="twitter:title" content="SVIT Attend Hub - College Attendance Management System" />
+    <meta name="twitter:description" content="Sardar Vallabhbhai Patel Institute of Technology - Enterprise Attendance Management System." />
+    <meta name="twitter:image" content="https://svit-attend-hub.vercel.app/svit-logo-official.jpg" />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "EducationalOrganization",
+            "@id": "https://svitvasad.ac.in/#organization",
+            "name": "Sardar Vallabhbhai Patel Institute of Technology",
+            "alternateName": "SVIT Vasad",
+            "url": "https://svitvasad.ac.in",
+            "logo": "https://svit-attend-hub.vercel.app/svit-logo-official.jpg",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Vasad",
+              "addressRegion": "Gujarat",
+              "addressCountry": "IN"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://svit-attend-hub.vercel.app/#website",
+            "url": "https://svit-attend-hub.vercel.app/",
+            "name": "SVIT Attend Hub",
+            "publisher": {
+              "@id": "https://svitvasad.ac.in/#organization"
+            },
+            "description": "Enterprise Attendance Management System for Sardar Vallabhbhai Patel Institute of Technology."
+          }
+        ]
+      }
+    </script>
     
     <!-- Preload critical fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

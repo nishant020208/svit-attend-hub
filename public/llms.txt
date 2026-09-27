@@ -1,0 +1,24 @@
+# SVIT Attend Hub
+
+> Enterprise Attendance and College Management System for Sardar Vallabhbhai Patel Institute of Technology (SVIT), Vasad.
+
+## Overview
+SVIT Attend Hub is a full-featured progressive web application (PWA) facilitating real-time attendance management, multi-role portal workflows, academic operations, and analytics for college students, faculty members, parents, and administrative staff.
+
+## Roles & Capabilities
+- **Students**: Dynamic QR code attendance, personal attendance metrics, exam results, timetable, and study materials.
+- **Faculty / Teachers**: Class attendance tracking, assignment evaluation, student at-risk identification, and performance analysis.
+- **Parents**: Real-time student attendance monitoring, direct faculty communications, and academic progress updates.
+- **Administrators**: System configuration, role assignment, course and department management, and institutional risk analytics.
+- **Librarians**: Rapid book issue and return tracking via integrated QR scanning.
+
+## Technology Stack
+- Frontend: React 18, TypeScript, Vite 5, Tailwind CSS, Shadcn UI
+- Backend: Supabase (PostgreSQL, Supabase Auth, Row Level Security, Edge Functions)
+- PWA: Service Worker caching, offline support, installable web application
+- Domain: https://svit-attend-hub.vercel.app
+
+## Institution Information
+- Institution: Sardar Vallabhbhai Patel Institute of Technology (SVIT)
+- Location: Vasad, Gujarat, India
+- Website: https://svitvasad.ac.in

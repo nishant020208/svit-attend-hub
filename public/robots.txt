@@ -1,14 +1,30 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+Allow: /auth
+Allow: /about
+Allow: /install
+Disallow: /dashboard
+Disallow: /attendance
+Disallow: /attendance-qr
+Disallow: /leave
+Disallow: /timetable
+Disallow: /announcements
+Disallow: /reports
+Disallow: /results
+Disallow: /settings
+Disallow: /courses
+Disallow: /subjects
+Disallow: /notifications
+Disallow: /students
+Disallow: /parent-links
+Disallow: /library
+Disallow: /librarian-dashboard
+Disallow: /book-return
+Disallow: /homework
+Disallow: /course-structure
+Disallow: /student-assign
+Disallow: /feedback
+Disallow: /student-profile
+Disallow: /risk
+
+Sitemap: https://svit-attend-hub.vercel.app/sitemap.xml
